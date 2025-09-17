@@ -143,11 +143,12 @@ python worldexplorer.py expand "./panoramas/[name]/[timestamp]/final" --translat
 
 **Requirements:** The input folder must contain 8 images named `000.png` through `007.png`.
 
-#### 4. `info` - Display Help Information
-Shows detailed information about WorldExplorer.
+#### 4. `--help` flag
+You can use the `--help` flag at any level to show how a given command should be used.
 
 ```bash
-python worldexplorer.py info
+python worldexplorer.py --help
+python worldexplorer.py generate --help
 ```
 
 ### Panorama Scaffold Generation Modes
