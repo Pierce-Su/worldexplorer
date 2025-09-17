@@ -4,7 +4,7 @@ WorldExplorer produces high-quality scenes that remain stable under large camera
 
 This is the official repository for the SIGGRAPH Asia 2025 paper "WorldExplorer: Towards Generating Fully Navigable 3D Scenes".
 
-[[arXiv](https://arxiv.org/abs/2506.01799)] [[Project Page](mschneider456.github.io/world-explorer)] [[Video](https://youtu.be/N6NJsNyiv6I)]
+[[arXiv](https://arxiv.org/abs/2506.01799)] [[Project Page](https://mschneider456.github.io/world-explorer/)] [[Video](https://youtu.be/N6NJsNyiv6I)]
 
 ![Teaser](docs/teaser.jpg "WorldExplorer")
 
