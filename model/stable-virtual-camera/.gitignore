@@ -1,0 +1,87 @@
+.envrc
+.venv/
+.gradio/
+work_dirs*
+experiments/
+trajectories/
+trajectories_adjusted/
+trajectories_all/
+trajectories_simple/
+trajectories_simple_all/
+metrics/
+traj1/
+traj1_all/
+indoor/
+indoor_counter_clockwise/
+final_trajectories/
+traj1_all_single_jelly/
+single_all/
+single_one/
+final_panoramas/
+evaluation_imgs/
+scene_building_trajs/
+renders/
+outputs/
+trajs_backwards_all/
+trajs_last_try/
+extrinsics_src/
+iter_final/
+extrinsics/
+extrinsics_saved/
+afternoon/
+conservative/
+diff_traj/
+panoramas/
+final_panoramas_reordered/
+test_panorama_reordered/
+test_panorama/
+iter_final_corrected/
+global_samples.pt
+nerfstudio_output/
+predefined_trajectories/
+
+third_party/
+
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+env/
+venv/
+ENV/
+.VENV/
+
+# Distribution files
+build/
+dist/
+*.egg-info/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+
+# IDE files
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Testing and coverage
+htmlcov/
+.coverage
+*.cover
+*.py,cover
+.cache/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Pre-commit hooks
+.pre-commit-config.yaml~

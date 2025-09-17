@@ -1,0 +1,56 @@
+panoramas/
+model/Depth_Anything_V2/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth
+model/Video-Depth-Anything/checkpoints/video_depth_anything_vits.pth
+work_dirs/
+scenes/
+outputs/
+nerfstudio_output/
+renders/
+
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+env/
+venv/
+ENV/
+.VENV/
+
+# Distribution files
+build/
+dist/
+*.egg-info/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+
+# IDE files
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Testing and coverage
+htmlcov/
+.coverage
+*.cover
+*.py,cover
+.cache/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Pre-commit hooks
+.pre-commit-config.yaml~
+
+# Anthropic
+CLAUDE.md
+.claude/

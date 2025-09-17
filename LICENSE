@@ -1,0 +1,85 @@
+WorldExplorer License
+
+Copyright (c) 2025 Manuel-Andreas Schneider
+
+This software incorporates multiple components with different licenses:
+
+## Core WorldExplorer Code
+The core WorldExplorer implementation (excluding third-party components listed below) 
+is licensed under the MIT License:
+
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+## Third-Party Components
+
+This software includes the following third-party components with their respective licenses:
+
+### 1. Depth_Anything_V2 (model/Depth_Anything_V2/)
+Licensed under the Apache License, Version 2.0
+See model/Depth_Anything_V2/LICENSE for full license text
+http://www.apache.org/licenses/LICENSE-2.0
+
+### 2. Stable Virtual Camera (model/stable-virtual-camera/)
+Licensed under the Stability AI Non-Commercial License Agreement
+Copyright © Stability AI Ltd. All Rights Reserved.
+See model/stable-virtual-camera/LICENSE for full license text
+
+**IMPORTANT: The Stable Virtual Camera component restricts this software to 
+RESEARCH AND NON-COMMERCIAL USE ONLY. Commercial use is prohibited.**
+
+Required attribution: "Powered by Stability AI"
+
+### 3. VGGT (model/vggt/)
+Licensed under the Meta Research License with Acceptable Use Policy
+Copyright © Meta Platforms, Inc. and affiliates.
+See model/vggt/LICENSE.txt for full license text
+
+**IMPORTANT: The VGGT component is subject to Meta's Acceptable Use Policy
+which prohibits certain uses including commercial applications without 
+appropriate permissions.**
+
+### 4. Video Depth Anything (model/Video-Depth-Anything/)
+Licensed under the Apache License, Version 2.0
+See model/Video-Depth-Anything/LICENSE for full license text
+http://www.apache.org/licenses/LICENSE-2.0
+
+## Usage Restrictions
+
+Due to the inclusion of third-party components with restrictive licenses:
+
+1. **Non-Commercial Use Only**: The complete WorldExplorer system, including 
+   the Stable Virtual Camera component, is restricted to research and 
+   non-commercial purposes only.
+
+2. **Attribution Required**: When distributing or using this software, you must:
+   - Include this complete LICENSE file
+   - Display "Powered by Stability AI" prominently in any user interface, 
+     documentation, or related materials
+   - Acknowledge the use of Meta's VGGT in any research publications
+
+3. **Acceptable Use**: You must comply with:
+   - Stability AI's Acceptable Use Policy (https://stability.ai/use-policy)
+   - Meta's Acceptable Use Policy as outlined in the VGGT license
+
+4. **No Warranty**: This software is provided "AS IS" without warranty of any kind.
+
+For commercial licensing inquiries, you must obtain separate commercial licenses 
+from the respective copyright holders of the restricted components.
