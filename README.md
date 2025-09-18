@@ -1,4 +1,4 @@
-# [SIGGRAPH Asia 2025] WorldExplorer: Towards Generating Fully-Explorable 3D Scenes
+# [SIGGRAPH Asia 2025] WorldExplorer: Towards Generating Fully Navigable 3D Scenes
 
 WorldExplorer produces high-quality scenes that remain stable under large camera motion, enabling realistic and unrestricted exploration.
 
