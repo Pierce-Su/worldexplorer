@@ -14,7 +14,8 @@ If you find WorldExplorer useful for your work please consider giving a star ⭐
 @InProceedings{schneider_hoellein_2025_worldexplorer,
     title={WorldExplorer: Towards Generating Fully Navigable 3D Scenes},
     author={Schneider, Manuel-Andreas and H{\"o}llein, Lukas and Nie{\ss}ner, Matthias},
-    journal={arXiv preprint arXiv:2506.01799},
+    booktitle={SIGGRAPH Asia 2025 Conference Papers},
+    pages={1--11},
     year={2025}
 }
 ```
