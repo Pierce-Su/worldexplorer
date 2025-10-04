@@ -4,6 +4,7 @@ from typing import Optional
 from pathlib import Path
 import datetime
 import os
+import subprocess
 
 # Import the refactored functions from existing modules
 from model.scaffold_generation import GenerationMode, run_scaffold_generation
@@ -14,6 +15,66 @@ app = typer.Typer(
     help="🌍 WorldExplorer - Towards Fully-Navigable 3D Scenes",
     add_completion=False
 )
+
+
+def check_and_download_checkpoints():
+    """Check for required checkpoints and download them if missing."""
+
+    # Check for Video-Depth-Anything checkpoint
+    vda_checkpoint_path = Path("model/Video-Depth-Anything/checkpoints/video_depth_anything_vits.pth")
+    if not vda_checkpoint_path.exists():
+        print("\n📥 Video-Depth-Anything checkpoint not found. Downloading...")
+
+        # Download the checkpoint file
+        download_url = "https://huggingface.co/depth-anything/Video-Depth-Anything-Small/resolve/main/video_depth_anything_vits.pth?download=true"
+        download_cmd = f'wget -O {vda_checkpoint_path} "{download_url}"'
+
+        try:
+            result = subprocess.run(download_cmd, shell=True, capture_output=True, text=True)
+            if result.returncode == 0:
+                print(f"✅ Successfully downloaded Video-Depth-Anything checkpoint to {vda_checkpoint_path}")
+            else:
+                print(f"❌ Error downloading Video-Depth-Anything checkpoint: {result.stderr}")
+                print("\nPlease download manually from:")
+                print(f"  {download_url}")
+                print(f"And save to: {vda_checkpoint_path}")
+                raise typer.Exit(1)
+        except Exception as e:
+            print(f"❌ Error downloading Video-Depth-Anything checkpoint: {e}")
+            print("\nPlease download manually from:")
+            print(f"  {download_url}")
+            print(f"And save to: {vda_checkpoint_path}")
+            raise typer.Exit(1)
+    else:
+        print(f"✅ Video-Depth-Anything checkpoint found: {vda_checkpoint_path}")
+
+    # Check for Depth_Anything_V2 checkpoint
+    da2_checkpoint_path = Path("model/Depth_Anything_V2/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth")
+    if not da2_checkpoint_path.exists():
+        print("\n📥 Depth_Anything_V2 checkpoint not found. Downloading...")
+
+        # Download the checkpoint file
+        download_url = "https://huggingface.co/depth-anything/Depth-Anything-V2-Metric-Hypersim-Large/resolve/main/depth_anything_v2_metric_hypersim_vitl.pth?download=true"
+        download_cmd = f'wget -O {da2_checkpoint_path} "{download_url}"'
+
+        try:
+            result = subprocess.run(download_cmd, shell=True, capture_output=True, text=True)
+            if result.returncode == 0:
+                print(f"✅ Successfully downloaded Depth_Anything_V2 checkpoint to {da2_checkpoint_path}")
+            else:
+                print(f"❌ Error downloading Depth_Anything_V2 checkpoint: {result.stderr}")
+                print("\nPlease download manually from:")
+                print(f"  {download_url}")
+                print(f"And save to: {da2_checkpoint_path}")
+                raise typer.Exit(1)
+        except Exception as e:
+            print(f"❌ Error downloading Depth_Anything_V2 checkpoint: {e}")
+            print("\nPlease download manually from:")
+            print(f"  {download_url}")
+            print(f"And save to: {da2_checkpoint_path}")
+            raise typer.Exit(1)
+    else:
+        print(f"✅ Depth_Anything_V2 checkpoint found: {da2_checkpoint_path}")
 
 
 @app.command()
@@ -27,7 +88,10 @@ def generate(
     num_images_for_vggt: int = typer.Option(40, "--num-images-for-vggt", help="Number of images to be sampled from the global scene memory as input to VGGT in addition to the scaffold images. The higher the number of images, the better the initial pointcloud used for gaussian-splatting initialization. We recommend to set the parameter according to the available GPU memory.")
 ):
     """Generate scaffold and optionally expand to 3D scene."""
-    
+
+    # Check and download checkpoints if needed
+    check_and_download_checkpoints()
+
     print(f"\n{'='*80}")
     print("SCAFFOLD GENERATION")
     print(f"{'='*80}")
@@ -147,7 +211,10 @@ def expand(
         raise typer.Exit(1)
     
     print(f"\n✅ Found all 8 required images in: {input_folder}")
-    
+
+    # Check and download checkpoints if needed
+    check_and_download_checkpoints()
+
     # If translation scaling factor not provided, prompt user
     if translation_scaling_factor is None:
         print("\n📏 Translation Scaling Factor")
@@ -184,6 +251,10 @@ def scaffold(
     custom: bool = typer.Option(False, "--custom", "-c", help="Enable custom mode for outdoor/custom scene generation with user-provided prompts")
 ):
     """Generate only the scaffold (no scene expansion)."""
+
+    # Check and download checkpoints if needed
+    check_and_download_checkpoints()
+
     print(f"\n{'='*80}")
     print("SCAFFOLD GENERATION ONLY")
     print(f"{'='*80}")

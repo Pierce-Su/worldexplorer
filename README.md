@@ -45,16 +45,6 @@ If you encounter [this issue](https://github.com/nerfstudio-project/gsplat/issue
 echo 'export PATH=/usr/local/cuda-12.8/bin:$PATH' >> ~/.bashrc
 ```
 
-### Download checkpoints
-
-Download the pretrained model checkpoints:
-
-```
-wget -O model/Depth_Anything_V2/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth "https://huggingface.co/depth-anything/Depth-Anything-V2-Metric-Hypersim-Large/resolve/main/depth_anything_v2_metric_hypersim_vitl.pth?download=true"
-
-wget -O model/Video-Depth-Anything/checkpoints/video_depth_anything_vits.pth "https://huggingface.co/depth-anything/Video-Depth-Anything-Small/resolve/main/video_depth_anything_vits.pth?download=true"
-``` 
-
 ### Authenticate with Hugging Face
 
 The `FLUX.1-dev` model used for initial image generation is gated and requires authentication.
@@ -68,7 +58,7 @@ The `FLUX.1-dev` model used for initial image generation is gated and requires a
    hf auth login
    ```
 
-The weights for the model will automatically be downloaded and saved the first time you generate a scene.
+The weights of the model will automatically be downloaded and saved the first time you generate a scene.
 
 ## Usage
 
