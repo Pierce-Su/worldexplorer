@@ -1,0 +1,813 @@
+
+
+Sampling:  98%|█████████▊| 49/50 [00:33<00:00,  1.44it/s]
+
+
+Sampling: 100%|██████████| 50/50 [00:34<00:00,  1.44it/s]
+
+
+
+
+100%|██████████| 3/3 [01:48<00:00, 36.36s/it]
+
+
+100%|██████████| 1/1 [04:45<00:00, 285.36s/it]
+100%|██████████| 1/1 [04:45<00:00, 285.36s/it]
+Successfully generated trajectory 007_up
+Running command: python model/svc_to_nerf_transform_sparse.py -r ./scenes/single_image_scenes_3.0_20260128_122421/img2trajvid
+Successfully created merged transforms file at: ./scenes/single_image_scenes_3.0_20260128_122421/img2trajvid/transforms.json
+Included 2445 frames (excluded frames with images in 'input' folders)
+Successfully created nerf transform
+Initializing and loading VGGT model...
+config.json: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 62.0/62.0 [00:00<00:00, 464kB/s]
+model.safetensors: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5.03G/5.03G [00:44<00:00, 114MB/s]
+Processing images from ./scenes/single_image_scenes_3.0_20260128_122421/img2trajvid/selected_for_vggt
+Found 49 images
+Preprocessed images shape: torch.Size([49, 3, 518, 518])
+Running inference...
+/mnt/facesim/pierce_E3DQA/locally_run_repos/worldexplorer/model/run_vggt.py:57: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autoc
+ast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(dtype=dtype):
+/mnt/facesim/pierce_E3DQA/locally_run_repos/worldexplorer/model/vggt/vggt/models/vggt.py:65: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `to
+rch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+Converting pose encoding to extrinsic and intrinsic matrices...
+Computing world points from depth map...
+Saved transformed point cloud to ./scenes/single_image_scenes_3.0_20260128_122421/img2trajvid/vggt_pcl.ply
+running splatfaco training
+/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/nerfstudio/field_components/activations.py:32: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is de
+precated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
+  @custom_fwd(cast_inputs=torch.float32)
+/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/nerfstudio/field_components/activations.py:39: FutureWarning: `torch.cuda.amp.custom_bwd(args...)` is de
+precated. Please use `torch.amp.custom_bwd(args..., device_type='cuda')` instead.
+  def backward(ctx, g):
+[17:40:25] Using --data alias for --data.pipeline.datamanager.data                                          train.py:241
+──────────────────────────────────────────────────────── Config ────────────────────────────────────────────────────────
+TrainerConfig(
+    _target=<class 'nerfstudio.engine.trainer.Trainer'>,
+    output_dir=PosixPath('nerfstudio_output'),
+    method_name='splatfacto',
+    experiment_name='single_image_scenes_3.0_20260128_122421',
+    project_name='nerfstudio-project',
+    timestamp='2026-01-28_174025',
+    machine=MachineConfig(seed=42, num_devices=1, num_machines=1, machine_rank=0, dist_url='auto', device_type='cuda'),
+    logging=LoggingConfig(
+        relative_log_dir=PosixPath('.'),
+        steps_per_log=10,
+        max_buffer_size=20,
+        local_writer=LocalWriterConfig(
+            _target=<class 'nerfstudio.utils.writer.LocalWriter'>,
+            enable=True,
+            stats_to_track=(
+                <EventName.ITER_TRAIN_TIME: 'Train Iter (time)'>,
+                <EventName.TRAIN_RAYS_PER_SEC: 'Train Rays / Sec'>,
+                <EventName.CURR_TEST_PSNR: 'Test PSNR'>,
+                <EventName.VIS_RAYS_PER_SEC: 'Vis Rays / Sec'>,
+                <EventName.TEST_RAYS_PER_SEC: 'Test Rays / Sec'>,
+                <EventName.ETA: 'ETA (time)'>
+            ),
+            max_log_size=10
+        ),
+        profiler='basic'
+    ),
+    viewer=ViewerConfig(
+        relative_log_filename='viewer_log_filename.txt',
+        websocket_port=None,
+        websocket_port_default=7007,
+        websocket_host='0.0.0.0',
+        num_rays_per_chunk=32768,
+        max_num_display_images=512,
+        quit_on_train_completion=False,
+        image_format='jpeg',
+        jpeg_quality=75,
+        make_share_url=False,
+        camera_frustum_scale=0.1,
+        default_composite_depth=True
+    ),
+    pipeline=VanillaPipelineConfig(
+        _target=<class 'nerfstudio.pipelines.base_pipeline.VanillaPipeline'>,
+        datamanager=FullImageDatamanagerConfig(
+            _target=<class 'nerfstudio.data.datamanagers.full_images_datamanager.FullImageDatamanager'>,
+            data=PosixPath('scenes/single_image_scenes_3.0_20260128_122421/img2trajvid'),
+            masks_on_gpu=False,
+            images_on_gpu=False,
+            dataparser=NerfstudioDataParserConfig(
+                _target=<class 'nerfstudio.data.dataparsers.nerfstudio_dataparser.Nerfstudio'>,
+                data=PosixPath('.'),
+                scale_factor=1.0,
+                downscale_factor=None,
+                scene_scale=1.0,
+                orientation_method='up',
+                center_method='poses',
+                auto_scale_poses=True,
+                eval_mode='all',
+                train_split_fraction=0.9,
+                eval_interval=8,
+                depth_unit_scale_factor=0.001,
+                mask_color=None,
+                load_3D_points=True
+            ),
+            camera_res_scale_factor=1.0,
+            eval_num_images_to_sample_from=-1,
+            eval_num_times_to_repeat_images=-1,
+            cache_images='gpu',
+            cache_images_type='uint8',
+            max_thread_workers=None,
+            train_cameras_sampling_strategy='random',
+            train_cameras_sampling_seed=42,
+            fps_reset_every=100,
+            dataloader_num_workers=4,
+            prefetch_factor=4,
+            cache_compressed_images=False
+        ),
+        model=SplatfactoModelConfig(
+            _target=<class 'nerfstudio.models.splatfacto.SplatfactoModel'>,
+            enable_collider=True,
+            collider_params={'near_plane': 2.0, 'far_plane': 6.0},
+            loss_coefficients={'rgb_loss_coarse': 1.0, 'rgb_loss_fine': 1.0},
+            eval_num_rays_per_chunk=4096,
+            prompt=None,
+            warmup_length=500,
+            refine_every=100,
+            resolution_schedule=3000,
+            background_color='random',
+            num_downscales=2,
+            cull_alpha_thresh=0.005,
+            cull_scale_thresh=0.1,
+            reset_alpha_every=30,
+            densify_grad_thresh=0.0005,
+            use_absgrad=True,
+            densify_size_thresh=0.01,
+            n_split_samples=2,
+            sh_degree_interval=1000,
+            cull_screen_size=0.1,
+            split_screen_size=0.05,
+            stop_screen_size_at=4000,
+            random_init=False,
+            num_random=50000,
+            random_scale=10.0,
+            ssim_lambda=0.2,
+            stop_split_at=15000,
+            sh_degree=3,
+            use_scale_regularization=True,
+            max_gauss_ratio=5.0,
+            output_depth_during_training=False,
+            rasterize_mode='antialiased',
+            camera_optimizer=CameraOptimizerConfig(
+                _target=<class 'nerfstudio.cameras.camera_optimizers.CameraOptimizer'>,
+                mode='off',
+                trans_l2_penalty=0.01,
+                rot_l2_penalty=0.001,
+                optimizer=None,
+                scheduler=None
+            ),
+            use_bilateral_grid=False,
+            grid_shape=(16, 16, 8),
+            color_corrected_metrics=False,
+            strategy='mcmc',
+            max_gs_num=1000000,
+            noise_lr=500000.0,
+            mcmc_opacity_reg=0.01,
+            mcmc_scale_reg=0.01
+        )
+    ),
+    optimizers={
+        'means': {
+            'optimizer': AdamOptimizerConfig(
+                _target=<class 'torch.optim.adam.Adam'>,
+                lr=0.00016,
+                eps=1e-15,
+                max_norm=None,
+                weight_decay=0
+            ),
+            'scheduler': ExponentialDecaySchedulerConfig(
+                _target=<class 'nerfstudio.engine.schedulers.ExponentialDecayScheduler'>,
+                lr_pre_warmup=1e-08,
+                lr_final=1.6e-06,
+                warmup_steps=0,
+                max_steps=30000,
+                ramp='cosine'
+            )
+        },
+        'features_dc': {
+            'optimizer': AdamOptimizerConfig(
+                _target=<class 'torch.optim.adam.Adam'>,
+                lr=0.0025,
+                eps=1e-15,
+                max_norm=None,
+                weight_decay=0
+            ),
+            'scheduler': None
+        },
+        'features_rest': {
+            'optimizer': AdamOptimizerConfig(
+                _target=<class 'torch.optim.adam.Adam'>,
+                lr=0.000125,
+                eps=1e-15,
+                max_norm=None,
+                weight_decay=0
+            ),
+            'scheduler': None
+        },
+        'opacities': {
+            'optimizer': AdamOptimizerConfig(
+                _target=<class 'torch.optim.adam.Adam'>,
+                lr=0.05,
+                eps=1e-15,
+                max_norm=None,
+                weight_decay=0
+            ),
+            'scheduler': None
+        },
+        'scales': {
+            'optimizer': AdamOptimizerConfig(
+                _target=<class 'torch.optim.adam.Adam'>,
+                lr=0.005,
+                eps=1e-15,
+                max_norm=None,
+                weight_decay=0
+            ),
+            'scheduler': None
+        },
+        'quats': {
+            'optimizer': AdamOptimizerConfig(
+                _target=<class 'torch.optim.adam.Adam'>,
+                lr=0.001,
+                eps=1e-15,
+                max_norm=None,
+                weight_decay=0
+            ),
+            'scheduler': None
+        },
+        'camera_opt': {
+            'optimizer': AdamOptimizerConfig(
+                _target=<class 'torch.optim.adam.Adam'>,
+                lr=0.0001,
+                eps=1e-15,
+                max_norm=None,
+                weight_decay=0
+            ),
+            'scheduler': ExponentialDecaySchedulerConfig(
+                _target=<class 'nerfstudio.engine.schedulers.ExponentialDecayScheduler'>,
+                lr_pre_warmup=0,
+                lr_final=5e-07,
+                warmup_steps=1000,
+                max_steps=30000,
+                ramp='cosine'
+            )
+        },
+        'bilateral_grid': {
+            'optimizer': AdamOptimizerConfig(
+                _target=<class 'torch.optim.adam.Adam'>,
+                lr=0.002,
+                eps=1e-15,
+                max_norm=None,
+                weight_decay=0
+            ),
+            'scheduler': ExponentialDecaySchedulerConfig(
+                _target=<class 'nerfstudio.engine.schedulers.ExponentialDecayScheduler'>,
+                lr_pre_warmup=0,
+                lr_final=0.0001,
+                warmup_steps=1000,
+                max_steps=30000,
+                ramp='cosine'
+            )
+        }
+    },
+    vis='tensorboard',
+    data=PosixPath('scenes/single_image_scenes_3.0_20260128_122421/img2trajvid'),
+    prompt=None,
+    relative_model_dir=PosixPath('nerfstudio_models'),
+    load_scheduler=True,
+    steps_per_save=2000,
+    steps_per_eval_batch=0,
+    steps_per_eval_image=5000,
+    steps_per_eval_all_images=1000000,
+    max_num_iterations=30000,
+    mixed_precision=False,
+    use_grad_scaler=False,
+    save_only_latest_checkpoint=True,
+    load_dir=None,
+    load_step=None,
+    load_config=None,
+    load_checkpoint=None,
+    log_gradients=False,
+    gradient_accumulation_steps={},
+    start_paused=False
+)
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+           Saving config to:                                                                    experiment_config.py:136
+           nerfstudio_output/single_image_scenes_3.0_20260128_122421/splatfacto/2026-01-28_1740
+           25/config.yml
+/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/nerfstudio/engine/trainer.py:137: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Ple
+ase use `torch.amp.GradScaler('cuda', args...)` instead.
+  self.grad_scaler = GradScaler(enabled=self.use_grad_scaler)
+           Saving checkpoints to:                                                                         trainer.py:142
+           nerfstudio_output/single_image_scenes_3.0_20260128_122421/splatfacto/2026-01-28_174025/nerfstu
+           dio_models
+           Auto image downscale factor of 1                                                 nerfstudio_dataparser.py:484
+            Be careful with '--eval-mode=all'. If using camera optimization, the cameras    nerfstudio_dataparser.py:216
+           may diverge in the current implementation, giving unpredictable results.
+[17:40:26]  Be careful with '--eval-mode=all'. If using camera optimization, the cameras    nerfstudio_dataparser.py:216
+           may diverge in the current implementation, giving unpredictable results.
+Train dataset has over 500 images, overriding cache_images to cpu. If you still get OOM errors or segfault, please
+consider seting cache_images to 'disk'
+Downloading: "https://download.pytorch.org/models/alexnet-owt-7be5be79.pth" to /home/pierce/.cache/torch/hub/checkpoints/alexnet-owt-7be5be79.pth
+100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 233M/233M [00:02<00:00, 117MB/s]
+No Nerfstudio checkpoint to load, so training from scratch.
+logging events to: nerfstudio_output/single_image_scenes_3.0_20260128_122421/splatfacto/2026-01-28_174025
+[17:40:33] Caching / undistorting train images                                            full_images_datamanager.py:239
+/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/torch/_inductor/compile_fx.py:321: UserWarning: TensorFloat32 tensor cores for float32 matrix multiplica
+tion available but not enabled. Consider setting `torch.set_float32_matmul_precision('high')` for better performance.
+  warnings.warn(
+gsplat: No CUDA toolkit found. gsplat will be disabled.
+Printing profiling stats, from longest to shortest duration in seconds
+Trainer.train_iteration: 100.9351
+VanillaPipeline.get_train_loss_dict: 100.9348
+Traceback (most recent call last):
+  File "/home/pierce/.conda/envs/worldexplorer/bin/ns-train", line 7, in <module>
+    sys.exit(entrypoint())
+  File "/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/nerfstudio/scripts/train.py", line 273, in entrypoint
+    main(
+  File "/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/nerfstudio/scripts/train.py", line 258, in main
+    launch(
+  File "/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/nerfstudio/scripts/train.py", line 190, in launch
+    main_func(local_rank=0, world_size=world_size, config=config)
+  File "/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/nerfstudio/scripts/train.py", line 101, in train_loop
+    trainer.train()
+  File "/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/nerfstudio/engine/trainer.py", line 266, in train
+    loss, loss_dict, metrics_dict = self.train_iteration(step)
+  File "/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/nerfstudio/utils/profiler.py", line 111, in inner
+    out = func(*args, **kwargs)
+  File "/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/nerfstudio/engine/trainer.py", line 502, in train_iteration
+    _, loss_dict, metrics_dict = self.pipeline.get_train_loss_dict(step=step)
+  File "/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/nerfstudio/utils/profiler.py", line 111, in inner
+    out = func(*args, **kwargs)
+  File "/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/nerfstudio/pipelines/base_pipeline.py", line 299, in get_train_loss_dict
+    model_outputs = self._model(ray_bundle)  # train distributed data parallel model if world_size > 1
+  File "/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/nerfstudio/models/base_model.py", line 143, in forward
+    return self.get_outputs(ray_bundle)
+  File "/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/nerfstudio/models/splatfacto.py", line 555, in get_outputs
+    render, alpha, self.info = rasterization(  # type: ignore[reportPossiblyUnboundVariable]
+  File "/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/gsplat/rendering.py", line 297, in rasterization
+    proj_results = fully_fused_projection(
+  File "/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/gsplat/cuda/_wrapper.py", line 306, in fully_fused_projection
+    return _FullyFusedProjection.apply(
+  File "/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/torch/autograd/function.py", line 583, in apply
+    return super().apply(*args, **kwargs)  # type: ignore[misc]
+  File "/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/gsplat/cuda/_wrapper.py", line 778, in forward
+    camera_model_type = _make_lazy_cuda_obj(
+  File "/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/gsplat/cuda/_wrapper.py", line 25, in _make_lazy_cuda_obj
+    obj = getattr(_C, name_split)
+AttributeError: 'NoneType' object has no attribute 'CameraModelType'
+
+--- Trajectory transformation process completed ---
+
+
+--- Exporting splatfacto to .ply file ---
+
+Exporting splatfacto from config: ./nerfstudio_output/single_image_scenes_3.0_20260128_122421/splatfacto/2026-01-28_174025/config.yml
+Output directory: ./nerfstudio_output/single_image_scenes_3.0_20260128_122421/splatfacto/2026-01-28_174025/exports/splat
+/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/nerfstudio/field_components/activations.py:32: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is de
+precated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
+  @custom_fwd(cast_inputs=torch.float32)
+/home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/nerfstudio/field_components/activations.py:39: FutureWarning: `torch.cuda.amp.custom_bwd(args...)` is de
+precated. Please use `torch.amp.custom_bwd(args..., device_type='cuda')` instead.
+  def backward(ctx, g):
+[17:42:22]  Be careful with '--eval-mode=all'. If using camera optimization, the cameras    nerfstudio_dataparser.py:216
+           may diverge in the current implementation, giving unpredictable results.
+[17:42:23]  Be careful with '--eval-mode=all'. If using camera optimization, the cameras    nerfstudio_dataparser.py:216
+           may diverge in the current implementation, giving unpredictable results.
+Train dataset has over 500 images, overriding cache_images to cpu. If you still get OOM errors or segfault, please
+consider seting cache_images to 'disk'
+Loading latest checkpoint from load_dir
+──────────────────────────────────────────────────────── Error ─────────────────────────────────────────────────────────
+                                            No checkpoint directory found at
+       nerfstudio_output/single_image_scenes_3.0_20260128_122421/splatfacto/2026-01-28_174025/nerfstudio_models,
+             Please make sure the checkpoint exists, they should be generated periodically during training
+Failed to export splatfacto (return code: 1)
+╭─────────────────────────────────────────────────────────────────── Traceback (most recent call last) ────────────────────────────────────────────────────────────────────╮
+│ /mnt/facesim/pierce_E3DQA/locally_run_repos/worldexplorer/single_image_to_3d.py:395 in expand                                                                            │
+│                                                                                                                                                                          │
+│   392 │   print(f"🚀 Starting scene expansion...")                                                                                                                       │
+│   393 │   print(f"⏱️  This process will take 6-7 hours to complete.\n")                                                                                                  │
+│   394 │                                                                                                                                                                  │
+│ ❱ 395 │   work_dir = run_scene_expansion(                                                                                                                                │
+│   396 │   │   scaffold_dir,                                                                                                                                              │
+│   397 │   │   translation_scaling_factor=translation_scaling_factor,                                                                                                     │
+│   398 │   │   num_images_for_vggt=40                                                                                                                                     │
+│                                                                                                                                                                          │
+│ ╭─────────────────────────────────────── locals ───────────────────────────────────────╮                                                                                 │
+│ │                          i = 7                                                       │                                                                                 │
+│ │                   img_path = './single_image_scenes/living_spaces_006/final/007.png' │                                                                                 │
+│ │             missing_images = []                                                      │                                                                                 │
+│ │               scaffold_dir = './single_image_scenes/living_spaces_006/final'         │                                                                                 │
+│ │ translation_scaling_factor = 3.0                                                     │                                                                                 │
+│ ╰──────────────────────────────────────────────────────────────────────────────────────╯                                                                                 │
+│                                                                                                                                                                          │
+│ /mnt/facesim/pierce_E3DQA/locally_run_repos/worldexplorer/model/scene_expansion.py:583 in run_scene_expansion                                                            │
+│                                                                                                                                                                          │
+│   580 │   │   scene_id=scene_id,                                                                                                                                         │
+│   581 │   │   num_images_for_vggt=num_images_for_vggt                                                                                                                    │
+│   582 │   )                                                                                                                                                              │
+│ ❱ 583 │   transformer.run()                                                                                                                                              │
+│   584 │                                                                                                                                                                  │
+│   585 │   return scene_work_dir                                                                                                                                          │
+│   586                                                                                                                                                                    │
+│                                                                                                                                                                          │
+│ ╭────────────────────────────────────────────── locals ───────────────────────────────────────────────╮                                                                  │
+│ │               input_folder = './single_image_scenes/living_spaces_006/final'                        │                                                                  │
+│ │        num_images_for_vggt = 40                                                                     │                                                                  │
+│ │              parent_parent = 'single_image_scenes'                                                  │                                                                  │
+│ │                   root_dir = './predefined_trajectories'                                            │                                                                  │
+│ │                   scene_id = 'single_image_scenes_3.0_20260128_122421'                              │                                                                  │
+│ │                 scene_name = 'single_image_scenes'                                                  │                                                                  │
+│ │             scene_work_dir = './scenes/single_image_scenes_3.0_20260128_122421'                     │                                                                  │
+│ │                  timestamp = '20260128_122421'                                                      │                                                                  │
+│ │           trajectory_order = ['in', 'left', 'right', 'up']                                          │                                                                  │
+│ │                transformer = <model.scene_expansion.TrajectoryTransformer object at 0x79945a5198d0> │                                                                  │
+│ │ translation_scaling_factor = 3.0                                                                    │                                                                  │
+│ ╰─────────────────────────────────────────────────────────────────────────────────────────────────────╯                                                                  │
+│                                                                                                                                                                          │
+│ /mnt/facesim/pierce_E3DQA/locally_run_repos/worldexplorer/model/scene_expansion.py:522 in run                                                                            │
+│                                                                                                                                                                          │
+│   519 │   │   │   │   │   │   │   print(f"Failed to export splatfacto (return code: {export_re                                                                           │
+│   520 │   │   │   │   │   │                                                                                                                                              │
+│   521 │   │   │   │   │   │   # Rotate the ply file, s.t. standard viewers like SuperSplat use                                                                           │
+│ ❱ 522 │   │   │   │   │   │   rotate_ply_3dgs(f"{output_dir}/splat.ply", f"{output_dir}/splat_                                                                           │
+│   523 │   │   │   │   │   │                                                                                                                                              │
+│   524 │   │   │   │   │   │   # Clear GPU memory after export                                                                                                            │
+│   525 │   │   │   │   │   │   gc.collect()                                                                                                                               │
+│                                                                                                                                                                          │
+│ ╭─────────────────────────────────────────────────────────────────────────────── locals ───────────────────────────────────────────────────────────────────────────────╮ │
+│ │               command = [                                                                                                                                            │ │
+│ │                         │   'ns-train',                                                                                                                              │ │
+│ │                         │   'splatfacto-big',                                                                                                                        │ │
+│ │                         │   '--data',                                                                                                                                │ │
+│ │                         │   './scenes/single_image_scenes_3.0_20260128_122421/img2trajvid',                                                                          │ │
+│ │                         │   '--output-dir',                                                                                                                          │ │
+│ │                         │   './nerfstudio_output',                                                                                                                   │ │
+│ │                         │   '--experiment-name',                                                                                                                     │ │
+│ │                         │   'single_image_scenes_3.0_20260128_122421',                                                                                               │ │
+│ │                         │   '--vis',                                                                                                                                 │ │
+│ │                         │   'tensorboard',                                                                                                                           │ │
+│ │                         │   ... +21                                                                                                                                  │ │
+│ │                         ]                                                                                                                                            │ │
+│ │           config_path = './nerfstudio_output/single_image_scenes_3.0_20260128_122421/splatfacto/2026-01-2'+19                                                        │ │
+│ │        export_command = ['python', '-c', "import sys, torch, os; os.environ['NERFSTUDIO_DISABLE_TORCH_COMPILE'] = '1'; sys"+448]                                     │ │
+│ │         export_result = CompletedProcess(args=['python', '-c', "import sys, torch, os; os.environ['NERFSTUDIO_DISABLE_TORCH_COMPILE'] = '1'; sys.argv =              │ │
+│ │                         ['ns-export', 'gaussian-splat', '--load-config',                                                                                             │ │
+│ │                         './nerfstudio_output/single_image_scenes_3.0_20260128_122421/splatfacto/2026-01-28_174025/config.yml', '--output-dir',                       │ │
+│ │                         './nerfstudio_output/single_image_scenes_3.0_20260128_122421/splatfacto/2026-01-28_174025/exports/splat']; orig = torch.load; setattr(torch, │ │
+│ │                         'load', lambda *a, **k: orig(*a, **{**k, 'weights_only': False})); from nerfstudio.scripts.exporter import entrypoint; entrypoint()"],       │ │
+│ │                         returncode=1)                                                                                                                                │ │
+│ │           folder_path = './predefined_trajectories/up'                                                                                                               │ │
+│ │                 frame = {                                                                                                                                            │ │
+│ │                         │   'fl_x': 0.8645833134651184,                                                                                                              │ │
+│ │                         │   'fl_y': 0.8645833134651184,                                                                                                              │ │
+│ │                         │   'cx': 0.5,                                                                                                                               │ │
+│ │                         │   'cy': 0.5,                                                                                                                               │ │
+│ │                         │   'w': 576,                                                                                                                                │ │
+│ │                         │   'h': 576,                                                                                                                                │ │
+│ │                         │   'file_path': './007.png',                                                                                                                │ │
+│ │                         │   'transform_matrix': [                                                                                                                    │ │
+│ │                         │   │   [-0.6046994116057498, -0.053018313058749274, -0.7946871586253704, 0.0],                                                              │ │
+│ │                         │   │   [0.7912704360676376, 0.07365785918466906, -0.6070136874780191, 0.0],                                                                 │ │
+│ │                         │   │   [0.09071779653954765, -0.9958732741974433, -0.002589040415541755, 0.0],                                                              │ │
+│ │                         │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                                 │ │
+│ │                         │   ]                                                                                                                                        │ │
+│ │                         }                                                                                                                                            │ │
+│ │              frame_id = '007'                                                                                                                                        │ │
+│ │   global_samples_file = './scenes/single_image_scenes_3.0_20260128_122421/global_samples.pt'                                                                         │ │
+│ │                img_id = '007'                                                                                                                                        │ │
+│ │      initial_matrices = {                                                                                                                                            │ │
+│ │                         │   '000': [                                                                                                                                 │ │
+│ │                         │   │   [0.13434162428529672, -0.05301830950702152, -0.9895157334986674, 0.0],                                                               │ │
+│ │                         │   │   [0.9887361859713323, 0.07365785425028605, 0.13028919643170753, 0.0],                                                                 │ │
+│ │                         │   │   [0.06597789715447035, -0.9958732074833111, 0.06231644108458772, 0.0],                                                                │ │
+│ │                         │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                                 │ │
+│ │                         │   ],                                                                                                                                       │ │
+│ │                         │   '001': [                                                                                                                                 │ │
+│ │                         │   │   [0.7946871586253704, -0.053018313058749274, -0.6046994116057498, 0.0],                                                               │ │
+│ │                         │   │   [0.6070136874780191, 0.07365785918466906, 0.7912704360676376, 0.0],                                                                  │ │
+│ │                         │   │   [0.002589040415541755, -0.9958732741974433, 0.09071779653954765, 0.0],                                                               │ │
+│ │                         │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                                 │ │
+│ │                         │   ],                                                                                                                                       │ │
+│ │                         │   '002': [                                                                                                                                 │ │
+│ │                         │   │   [0.9895157334986674, -0.05301830950702152, 0.13434162428529672, 0.0],                                                                │ │
+│ │                         │   │   [-0.13028919643170753, 0.07365785425028605, 0.9887361859713323, 0.0],                                                                │ │
+│ │                         │   │   [-0.06231644108458772, -0.9958732074833111, 0.06597789715447035, 0.0],                                                               │ │
+│ │                         │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                                 │ │
+│ │                         │   ],                                                                                                                                       │ │
+│ │                         │   '003': [                                                                                                                                 │ │
+│ │                         │   │   [0.6046994116057498, -0.053018313058749274, 0.7946871586253704, 0.0],                                                                │ │
+│ │                         │   │   [-0.7912704360676376, 0.07365785918466906, 0.6070136874780191, 0.0],                                                                 │ │
+│ │                         │   │   [-0.09071779653954765, -0.9958732741974433, 0.002589040415541755, 0.0],                                                              │ │
+│ │                         │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                                 │ │
+│ │                         │   ],                                                                                                                                       │ │
+│ │                         │   '004': [                                                                                                                                 │ │
+│ │                         │   │   [-0.13434162428529672, -0.05301830950702152, 0.9895157334986674, 0.0],                                                               │ │
+│ │                         │   │   [-0.9887361859713323, 0.07365785425028605, -0.13028919643170753, 0.0],                                                               │ │
+│ │                         │   │   [-0.06597789715447035, -0.9958732074833111, -0.06231644108458772, 0.0],                                                              │ │
+│ │                         │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                                 │ │
+│ │                         │   ],                                                                                                                                       │ │
+│ │                         │   '005': [                                                                                                                                 │ │
+│ │                         │   │   [-0.7946871586253704, -0.053018313058749274, 0.6046994116057498, 0.0],                                                               │ │
+│ │                         │   │   [-0.6070136874780191, 0.07365785918466906, -0.7912704360676376, 0.0],                                                                │ │
+│ │                         │   │   [-0.002589040415541755, -0.9958732741974433, -0.09071779653954765, 0.0],                                                             │ │
+│ │                         │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                                 │ │
+│ │                         │   ],                                                                                                                                       │ │
+│ │                         │   '006': [                                                                                                                                 │ │
+│ │                         │   │   [-0.9895157334986674, -0.05301830950702152, -0.13434162428529672, 0.0],                                                              │ │
+│ │                         │   │   [0.13028919643170753, 0.07365785425028605, -0.9887361859713323, 0.0],                                                                │ │
+│ │                         │   │   [0.06231644108458772, -0.9958732074833111, -0.06597789715447035, 0.0],                                                               │ │
+│ │                         │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                                 │ │
+│ │                         │   ],                                                                                                                                       │ │
+│ │                         │   '007': [                                                                                                                                 │ │
+│ │                         │   │   [-0.6046994116057498, -0.053018313058749274, -0.7946871586253704, 0.0],                                                              │ │
+│ │                         │   │   [0.7912704360676376, 0.07365785918466906, -0.6070136874780191, 0.0],                                                                 │ │
+│ │                         │   │   [0.09071779653954765, -0.9958732741974433, -0.002589040415541755, 0.0],                                                              │ │
+│ │                         │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                                 │ │
+│ │                         │   ]                                                                                                                                        │ │
+│ │                         }                                                                                                                                            │ │
+│ │            latest_run = '2026-01-28_174025'                                                                                                                          │ │
+│ │   original_transforms = {                                                                                                                                            │ │
+│ │                         │   'orientation_override': 'none',                                                                                                          │ │
+│ │                         │   'frames': [                                                                                                                              │ │
+│ │                         │   │   {                                                                                                                                    │ │
+│ │                         │   │   │   'fl_x': 0.8645833134651184,                                                                                                      │ │
+│ │                         │   │   │   'fl_y': 0.8645833134651184,                                                                                                      │ │
+│ │                         │   │   │   'cx': 0.5,                                                                                                                       │ │
+│ │                         │   │   │   'cy': 0.5,                                                                                                                       │ │
+│ │                         │   │   │   'w': 576,                                                                                                                        │ │
+│ │                         │   │   │   'h': 576,                                                                                                                        │ │
+│ │                         │   │   │   'file_path': './000.png',                                                                                                        │ │
+│ │                         │   │   │   'transform_matrix': [                                                                                                            │ │
+│ │                         │   │   │   │   [0.13434162428529672, -0.05301830950702152, -0.9895157334986674, 0.0],                                                       │ │
+│ │                         │   │   │   │   [0.9887361859713323, 0.07365785425028605, 0.13028919643170753, 0.0],                                                         │ │
+│ │                         │   │   │   │   [0.06597789715447035, -0.9958732074833111, 0.06231644108458772, 0.0],                                                        │ │
+│ │                         │   │   │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                         │ │
+│ │                         │   │   │   ]                                                                                                                                │ │
+│ │                         │   │   },                                                                                                                                   │ │
+│ │                         │   │   {                                                                                                                                    │ │
+│ │                         │   │   │   'fl_x': 0.8645833134651184,                                                                                                      │ │
+│ │                         │   │   │   'fl_y': 0.8645833134651184,                                                                                                      │ │
+│ │                         │   │   │   'cx': 0.5,                                                                                                                       │ │
+│ │                         │   │   │   'cy': 0.5,                                                                                                                       │ │
+│ │                         │   │   │   'w': 576,                                                                                                                        │ │
+│ │                         │   │   │   'h': 576,                                                                                                                        │ │
+│ │                         │   │   │   'file_path': './001.png',                                                                                                        │ │
+│ │                         │   │   │   'transform_matrix': [                                                                                                            │ │
+│ │                         │   │   │   │   [0.7946871586253704, -0.053018313058749274, -0.6046994116057498, 0.0],                                                       │ │
+│ │                         │   │   │   │   [0.6070136874780191, 0.07365785918466906, 0.7912704360676376, 0.0],                                                          │ │
+│ │                         │   │   │   │   [0.002589040415541755, -0.9958732741974433, 0.09071779653954765, 0.0],                                                       │ │
+│ │                         │   │   │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                         │ │
+│ │                         │   │   │   ]                                                                                                                                │ │
+│ │                         │   │   },                                                                                                                                   │ │
+│ │                         │   │   {                                                                                                                                    │ │
+│ │                         │   │   │   'fl_x': 0.8645833134651184,                                                                                                      │ │
+│ │                         │   │   │   'fl_y': 0.8645833134651184,                                                                                                      │ │
+│ │                         │   │   │   'cx': 0.5,                                                                                                                       │ │
+│ │                         │   │   │   'cy': 0.5,                                                                                                                       │ │
+│ │                         │   │   │   'w': 576,                                                                                                                        │ │
+│ │                         │   │   │   'h': 576,                                                                                                                        │ │
+│ │                         │   │   │   'file_path': './002.png',                                                                                                        │ │
+│ │                         │   │   │   'transform_matrix': [                                                                                                            │ │
+│ │                         │   │   │   │   [0.9895157334986674, -0.05301830950702152, 0.13434162428529672, 0.0],                                                        │ │
+│ │                         │   │   │   │   [-0.13028919643170753, 0.07365785425028605, 0.9887361859713323, 0.0],                                                        │ │
+│ │                         │   │   │   │   [-0.06231644108458772, -0.9958732074833111, 0.06597789715447035, 0.0],                                                       │ │
+│ │                         │   │   │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                         │ │
+│ │                         │   │   │   ]                                                                                                                                │ │
+│ │                         │   │   },                                                                                                                                   │ │
+│ │                         │   │   {                                                                                                                                    │ │
+│ │                         │   │   │   'fl_x': 0.8645833134651184,                                                                                                      │ │
+│ │                         │   │   │   'fl_y': 0.8645833134651184,                                                                                                      │ │
+│ │                         │   │   │   'cx': 0.5,                                                                                                                       │ │
+│ │                         │   │   │   'cy': 0.5,                                                                                                                       │ │
+│ │                         │   │   │   'w': 576,                                                                                                                        │ │
+│ │                         │   │   │   'h': 576,                                                                                                                        │ │
+│ │                         │   │   │   'file_path': './003.png',                                                                                                        │ │
+│ │                         │   │   │   'transform_matrix': [                                                                                                            │ │
+│ │                         │   │   │   │   [0.6046994116057498, -0.053018313058749274, 0.7946871586253704, 0.0],                                                        │ │
+│ │                         │   │   │   │   [-0.7912704360676376, 0.07365785918466906, 0.6070136874780191, 0.0],                                                         │ │
+│ │                         │   │   │   │   [-0.09071779653954765, -0.9958732741974433, 0.002589040415541755, 0.0],                                                      │ │
+│ │                         │   │   │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                         │ │
+│ │                         │   │   │   ]                                                                                                                                │ │
+│ │                         │   │   },                                                                                                                                   │ │
+│ │                         │   │   {                                                                                                                                    │ │
+│ │                         │   │   │   'fl_x': 0.8645833134651184,                                                                                                      │ │
+│ │                         │   │   │   'fl_y': 0.8645833134651184,                                                                                                      │ │
+│ │                         │   │   │   'cx': 0.5,                                                                                                                       │ │
+│ │                         │   │   │   'cy': 0.5,                                                                                                                       │ │
+│ │                         │   │   │   'w': 576,                                                                                                                        │ │
+│ │                         │   │   │   'h': 576,                                                                                                                        │ │
+│ │                         │   │   │   'file_path': './004.png',                                                                                                        │ │
+│ │                         │   │   │   'transform_matrix': [                                                                                                            │ │
+│ │                         │   │   │   │   [-0.13434162428529672, -0.05301830950702152, 0.9895157334986674, 0.0],                                                       │ │
+│ │                         │   │   │   │   [-0.9887361859713323, 0.07365785425028605, -0.13028919643170753, 0.0],                                                       │ │
+│ │                         │   │   │   │   [-0.06597789715447035, -0.9958732074833111, -0.06231644108458772, 0.0],                                                      │ │
+│ │                         │   │   │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                         │ │
+│ │                         │   │   │   ]                                                                                                                                │ │
+│ │                         │   │   },                                                                                                                                   │ │
+│ │                         │   │   {                                                                                                                                    │ │
+│ │                         │   │   │   'fl_x': 0.8645833134651184,                                                                                                      │ │
+│ │                         │   │   │   'fl_y': 0.8645833134651184,                                                                                                      │ │
+│ │                         │   │   │   'cx': 0.5,                                                                                                                       │ │
+│ │                         │   │   │   'cy': 0.5,                                                                                                                       │ │
+│ │                         │   │   │   'w': 576,                                                                                                                        │ │
+│ │                         │   │   │   'h': 576,                                                                                                                        │ │
+│ │                         │   │   │   'file_path': './005.png',                                                                                                        │ │
+│ │                         │   │   │   'transform_matrix': [                                                                                                            │ │
+│ │                         │   │   │   │   [-0.7946871586253704, -0.053018313058749274, 0.6046994116057498, 0.0],                                                       │ │
+│ │                         │   │   │   │   [-0.6070136874780191, 0.07365785918466906, -0.7912704360676376, 0.0],                                                        │ │
+│ │                         │   │   │   │   [-0.002589040415541755, -0.9958732741974433, -0.09071779653954765, 0.0],                                                     │ │
+│ │                         │   │   │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                         │ │
+│ │                         │   │   │   ]                                                                                                                                │ │
+│ │                         │   │   },                                                                                                                                   │ │
+│ │                         │   │   {                                                                                                                                    │ │
+│ │                         │   │   │   'fl_x': 0.8645833134651184,                                                                                                      │ │
+│ │                         │   │   │   'fl_y': 0.8645833134651184,                                                                                                      │ │
+│ │                         │   │   │   'cx': 0.5,                                                                                                                       │ │
+│ │                         │   │   │   'cy': 0.5,                                                                                                                       │ │
+│ │                         │   │   │   'w': 576,                                                                                                                        │ │
+│ │                         │   │   │   'h': 576,                                                                                                                        │ │
+│ │                         │   │   │   'file_path': './006.png',                                                                                                        │ │
+│ │                         │   │   │   'transform_matrix': [                                                                                                            │ │
+│ │                         │   │   │   │   [-0.9895157334986674, -0.05301830950702152, -0.13434162428529672, 0.0],                                                      │ │
+│ │                         │   │   │   │   [0.13028919643170753, 0.07365785425028605, -0.9887361859713323, 0.0],                                                        │ │
+│ │                         │   │   │   │   [0.06231644108458772, -0.9958732074833111, -0.06597789715447035, 0.0],                                                       │ │
+│ │                         │   │   │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                         │ │
+│ │                         │   │   │   ]                                                                                                                                │ │
+│ │                         │   │   },                                                                                                                                   │ │
+│ │                         │   │   {                                                                                                                                    │ │
+│ │                         │   │   │   'fl_x': 0.8645833134651184,                                                                                                      │ │
+│ │                         │   │   │   'fl_y': 0.8645833134651184,                                                                                                      │ │
+│ │                         │   │   │   'cx': 0.5,                                                                                                                       │ │
+│ │                         │   │   │   'cy': 0.5,                                                                                                                       │ │
+│ │                         │   │   │   'w': 576,                                                                                                                        │ │
+│ │                         │   │   │   'h': 576,                                                                                                                        │ │
+│ │                         │   │   │   'file_path': './007.png',                                                                                                        │ │
+│ │                         │   │   │   'transform_matrix': [                                                                                                            │ │
+│ │                         │   │   │   │   [-0.6046994116057498, -0.053018313058749274, -0.7946871586253704, 0.0],                                                      │ │
+│ │                         │   │   │   │   [0.7912704360676376, 0.07365785918466906, -0.6070136874780191, 0.0],                                                         │ │
+│ │                         │   │   │   │   [0.09071779653954765, -0.9958732741974433, -0.002589040415541755, 0.0],                                                      │ │
+│ │                         │   │   │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                         │ │
+│ │                         │   │   │   ]                                                                                                                                │ │
+│ │                         │   │   },                                                                                                                                   │ │
+│ │                         │   │   {                                                                                                                                    │ │
+│ │                         │   │   │   'fl_x': 0.8645833134651184,                                                                                                      │ │
+│ │                         │   │   │   'fl_y': 0.8645833134651184,                                                                                                      │ │
+│ │                         │   │   │   'cx': 0.5,                                                                                                                       │ │
+│ │                         │   │   │   'cy': 0.5,                                                                                                                       │ │
+│ │                         │   │   │   'w': 576,                                                                                                                        │ │
+│ │                         │   │   │   'h': 576,                                                                                                                        │ │
+│ │                         │   │   │   'file_path': './008.png',                                                                                                        │ │
+│ │                         │   │   │   'transform_matrix': [                                                                                                            │ │
+│ │                         │   │   │   │   [0.13434159656553005, -0.05301834244172457, -0.9895157354973979, -1.7228036720198984e-18],                                   │ │
+│ │                         │   │   │   │   [0.9887361894311334, 0.07365786305351438, 0.13028916654730566, 7.833616947802902e-17],                                       │ │
+│ │                         │   │   │   │   [0.06597789888611287, -0.9958732723470001, 0.06231646879800008, 6.770548405636627e-17],                                      │ │
+│ │                         │   │   │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                         │ │
+│ │                         │   │   │   ]                                                                                                                                │ │
+│ │                         │   │   },                                                                                                                                   │ │
+│ │                         │   │   {                                                                                                                                    │ │
+│ │                         │   │   │   'fl_x': 0.8645833134651184,                                                                                                      │ │
+│ │                         │   │   │   'fl_y': 0.8645833134651184,                                                                                                      │ │
+│ │                         │   │   │   'cx': 0.5,                                                                                                                       │ │
+│ │                         │   │   │   'cy': 0.5,                                                                                                                       │ │
+│ │                         │   │   │   'w': 576,                                                                                                                        │ │
+│ │                         │   │   │   'h': 576,                                                                                                                        │ │
+│ │                         │   │   │   'file_path': './009.png',                                                                                                        │ │
+│ │                         │   │   │   'transform_matrix': [                                                                                                            │ │
+│ │                         │   │   │   │   [0.13434159656553032, -0.03171918271595071, -0.9904272961101469, 0.01957722423736008],                                       │ │
+│ │                         │   │   │   │   [0.9887361894311336, 0.07083798033922524, 0.13184357493128526, -0.002161617873185265],                                       │ │
+│ │                         │   │   │   │   [0.06597789888611291, -0.9969833870177035, 0.0408783912266883, -0.007468648589119663],                                       │ │
+│ │                         │   │   │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                         │ │
+│ │                         │   │   │   ]                                                                                                                                │ │
+│ │                         │   │   },                                                                                                                                   │ │
+│ │                         │   │   ... +43                                                                                                                              │ │
+│ │                         │   ]                                                                                                                                        │ │
+│ │                         }                                                                                                                                            │ │
+│ │            output_dir = './nerfstudio_output/single_image_scenes_3.0_20260128_122421/splatfacto/2026-01-2'+22                                                        │ │
+│ │      reference_matrix = [                                                                                                                                            │ │
+│ │                         │   [0.13434162428529672, -0.05301830950702152, -0.9895157334986674, 0.0],                                                                   │ │
+│ │                         │   [0.9887361859713323, 0.07365785425028605, 0.13028919643170753, 0.0],                                                                     │ │
+│ │                         │   [0.06597789715447035, -0.9958732074833111, 0.06231644108458772, 0.0],                                                                    │ │
+│ │                         │   [0.0, 0.0, 0.0, 1.0]                                                                                                                     │ │
+│ │                         ]                                                                                                                                            │ │
+│ │           return_code = 0                                                                                                                                            │ │
+│ │                  runs = ['2026-01-28_174025']                                                                                                                        │ │
+│ │            scene_root = './nerfstudio_output/single_image_scenes_3.0_20260128_122421/splatfacto'                                                                     │ │
+│ │                  self = <model.scene_expansion.TrajectoryTransformer object at 0x79945a5198d0>                                                                       │ │
+│ │         target_matrix = [                                                                                                                                            │ │
+│ │                         │   [-0.6046994116057498, -0.053018313058749274, -0.7946871586253704, 0.0],                                                                  │ │
+│ │                         │   [0.7912704360676376, 0.07365785918466906, -0.6070136874780191, 0.0],                                                                     │ │
+│ │                         │   [0.09071779653954765, -0.9958732741974433, -0.002589040415541755, 0.0],                                                                  │ │
+│ │                         │   [0.0, 0.0, 0.0, 1.0]                                                                                                                     │ │
+│ │                         ]                                                                                                                                            │ │
+│ │             traj_type = 'up'                                                                                                                                         │ │
+│ │ traj_types_to_process = ['in', 'left', 'right', 'up']                                                                                                                │ │
+│ │    trajectory_folders = {                                                                                                                                            │ │
+│ │                         │   'in': './predefined_trajectories/in',                                                                                                    │ │
+│ │                         │   'up': './predefined_trajectories/up',                                                                                                    │ │
+│ │                         │   'left': './predefined_trajectories/left',                                                                                                │ │
+│ │                         │   'right': './predefined_trajectories/right'                                                                                               │ │
+│ │                         }                                                                                                                                            │ │
+│ │       transformations = {                                                                                                                                            │ │
+│ │                         │   '001': [                                                                                                                                 │ │
+│ │                         │   │   [0.707930086951272, 0.7030449338727045, 0.06754859691429047, 0.0],                                                                   │ │
+│ │                         │   │   [-0.7053325566362656, 0.7086958677823474, 0.01600474581058601, 0.0],                                                                 │ │
+│ │                         │   │   [-0.0366193465003655, -0.05897447155708075, 0.9975876743630078, 0.0],                                                                │ │
+│ │                         │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                                 │ │
+│ │                         │   ],                                                                                                                                       │ │
+│ │                         │   '002': [                                                                                                                                 │ │
+│ │                         │   │   [0.002810941519595529, 0.9919680587599532, 0.12645738020291072, 0.0],                                                                │ │
+│ │                         │   │   [-0.9997784896349331, 0.005425480219668543, -0.020335580337861314, 0.0],                                                             │ │
+│ │                         │   │   [-0.020858338166427695, -0.12637220645535974, 0.9917635782607359, 0.0],                                                              │ │
+│ │                         │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                                 │ │
+│ │                         │   ],                                                                                                                                       │ │
+│ │                         │   '003': [                                                                                                                                 │ │
+│ │                         │   │   [-0.7023082035354677, 0.6975221252380601, 0.1422183956109907, 0.0],                                                                  │ │
+│ │                         │   │   [-0.7108553652709099, -0.6978449066160981, -0.08773332506418127, 0.0],                                                               │ │
+│ │                         │   │   [0.0380504521963344, -0.1627125424318482, 0.9859396150361155, 0.0],                                                                  │ │
+│ │                         │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                                 │ │
+│ │                         │   ],                                                                                                                                       │ │
+│ │                         │   '004': [                                                                                                                                 │ │
+│ │                         │   │   [-0.9943781169608088, -0.007810430874980124, 0.10559904203648338, 0.0],                                                              │ │
+│ │                         │   │   [-0.007810430874980073, -0.9891490395606629, -0.14670778679322113, 0.0],                                                             │ │
+│ │                         │   │   [0.10559904203648292, -0.14670778679322138, 0.9835271565214717, 0.0],                                                                │ │
+│ │                         │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                                 │ │
+│ │                         │   ],                                                                                                                                       │ │
+│ │                         │   '005': [                                                                                                                                 │ │
+│ │                         │   │   [-0.7023082035354677, -0.71085536527091, 0.0380504521963349, 0.0],                                                                   │ │
+│ │                         │   │   [0.6975221252380601, -0.6978449066160981, -0.16271254243184816, 0.0],                                                                │ │
+│ │                         │   │   [0.1422183956109904, -0.08773332506418163, 0.9859396150361154, 0.0],                                                                 │ │
+│ │                         │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                                 │ │
+│ │                         │   ],                                                                                                                                       │ │
+│ │                         │   '006': [                                                                                                                                 │ │
+│ │                         │   │   [0.00281094151959556, -0.9997784896349332, -0.020858338166427348, 0.0],                                                              │ │
+│ │                         │   │   [0.9919680587599531, 0.0054254802196685445, -0.12637220645535985, 0.0],                                                              │ │
+│ │                         │   │   [0.1264573802029106, -0.020335580337861665, 0.9917635782607358, 0.0],                                                                │ │
+│ │                         │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                                 │ │
+│ │                         │   ],                                                                                                                                       │ │
+│ │                         │   '007': [                                                                                                                                 │ │
+│ │                         │   │   [0.707930086951272, -0.7053325566362656, -0.03661934650036535, 0.0],                                                                 │ │
+│ │                         │   │   [0.7030449338727044, 0.7086958677823474, -0.05897447155708089, 0.0],                                                                 │ │
+│ │                         │   │   [0.06754859691429048, 0.016004745810585835, 0.9975876743630078, 0.0],                                                                │ │
+│ │                         │   │   [0.0, 0.0, 0.0, 1.0]                                                                                                                 │ │
+│ │                         │   ]                                                                                                                                        │ │
+│ │                         }                                                                                                                                            │ │
+│ │        wrapper_folder = './scenes/single_image_scenes_3.0_20260128_122421/007_up_wrapper'                                                                            │ │
+│ ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯ │
+│                                                                                                                                                                          │
+│ /mnt/facesim/pierce_E3DQA/locally_run_repos/worldexplorer/model/rotate_ply.py:66 in rotate_ply_3dgs                                                                      │
+│                                                                                                                                                                          │
+│    63 │   """                                                                                                                                                            │
+│    64 │                                                                                                                                                                  │
+│    65 │   # --- Step 1: Read binary PLY ---                                                                                                                              │
+│ ❱  66 │   plydata = PlyData.read(input_path)                                                                                                                             │
+│    67 │   vertex_data = plydata['vertex'].data  # structured array                                                                                                       │
+│    68 │                                                                                                                                                                  │
+│    69 │   # --- Step 2: Build global rotation (90° X, 180° Y) ---                                                                                                        │
+│                                                                                                                                                                          │
+│ ╭────────────────────────────────────────────── locals ───────────────────────────────────────────────╮                                                                  │
+│ │  input_path = './nerfstudio_output/single_image_scenes_3.0_20260128_122421/splatfacto/2026-01-2'+32 │                                                                  │
+│ │ output_path = './nerfstudio_output/single_image_scenes_3.0_20260128_122421/splatfacto/2026-01-2'+40 │                                                                  │
+│ ╰─────────────────────────────────────────────────────────────────────────────────────────────────────╯                                                                  │
+│                                                                                                                                                                          │
+│ /home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/plyfile.py:157 in read                                                                               │
+│                                                                                                                                                                          │
+│    154 │   │   │   If `stream` is open in text mode but the PLY header                                                                                                   │
+│    155 │   │   │   indicates binary encoding.                                                                                                                            │
+│    156 │   │   """                                                                                                                                                       │
+│ ❱  157 │   │   (must_close, stream) = _open_stream(stream, 'read')                                                                                                       │
+│    158 │   │   try:                                                                                                                                                      │
+│    159 │   │   │   data = PlyData._parse_header(stream)                                                                                                                  │
+│    160 │   │   │   if isinstance(stream.read(0), str):                                                                                                                   │
+│                                                                                                                                                                          │
+│ ╭──────────────────────────────────────────────── locals ────────────────────────────────────────────────╮                                                               │
+│ │ known_list_len = {}                                                                                    │                                                               │
+│ │           mmap = 'c'                                                                                   │                                                               │
+│ │         stream = './nerfstudio_output/single_image_scenes_3.0_20260128_122421/splatfacto/2026-01-2'+32 │                                                               │
+│ ╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯                                                               │
+│                                                                                                                                                                          │
+│ /home/pierce/.conda/envs/worldexplorer/lib/python3.10/site-packages/plyfile.py:1352 in _open_stream                                                                      │
+│                                                                                                                                                                          │
+│   1349 │   if hasattr(stream, read_or_write):                                                                                                                            │
+│   1350 │   │   return (False, stream)                                                                                                                                    │
+│   1351 │   try:                                                                                                                                                          │
+│ ❱ 1352 │   │   return (True, open(stream, read_or_write[0] + 'b'))                                                                                                       │
+│   1353 │   except TypeError:                                                                                                                                             │
+│   1354 │   │   raise TypeError("expected open file or filename")                                                                                                         │
+│   1355                                                                                                                                                                   │
+│                                                                                                                                                                          │
+│ ╭─────────────────────────────────────────────── locals ────────────────────────────────────────────────╮                                                                │
+│ │ read_or_write = 'read'                                                                                │                                                                │
+│ │        stream = './nerfstudio_output/single_image_scenes_3.0_20260128_122421/splatfacto/2026-01-2'+32 │                                                                │
+│ ╰───────────────────────────────────────────────────────────────────────────────────────────────────────╯                                                                │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+FileNotFoundError: [Errno 2] No such file or directory: './nerfstudio_output/single_image_scenes_3.0_20260128_122421/splatfacto/2026-01-28_174025/exports/splat/splat.ply'
+(worldexplorer) pierce@white:/mnt/facesim/pierce_E3DQA/locally_run_repos/worldexplorer$

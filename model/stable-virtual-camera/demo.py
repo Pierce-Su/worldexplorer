@@ -343,8 +343,13 @@ def main(
         # new
         # Get all items in the data_path
         all_items = glob.glob(osp.join(data_path, "*"))
-        # Filter to only include directories
-        scenes = [item for item in all_items if os.path.isdir(item)]
+        # For img2trajvid_s-prob task, look for image files instead of directories
+        if task == "img2trajvid_s-prob":
+            image_extensions = [".png", ".jpg", ".jpeg", ".PNG", ".JPG", ".JPEG"]
+            scenes = [item for item in all_items if os.path.isfile(item) and any(item.lower().endswith(ext.lower()) for ext in image_extensions)]
+        else:
+            # Filter to only include directories
+            scenes = [item for item in all_items if os.path.isdir(item)]
          # ------------- change to below to handle collision detection in first pass -------------
 
     for scene in tqdm(scenes):

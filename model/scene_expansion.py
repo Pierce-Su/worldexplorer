@@ -339,6 +339,12 @@ class TrajectoryTransformer:
                 '000', traj_type, original_transforms, transformations
             )
             
+            # Check if this trajectory already exists
+            expected_output_dir = os.path.join(self.work_dir, "img2trajvid", f"000_{traj_type}")
+            if os.path.exists(expected_output_dir) and os.path.exists(os.path.join(expected_output_dir, "transforms.json")):
+                print(f"Skipping 000_{traj_type} - already generated (found {expected_output_dir})")
+                continue
+            
             # Run the command with the wrapper folder
             command = (
                 f"python model/stable-virtual-camera/demo.py --data_path {wrapper_folder} --task img2trajvid "
@@ -408,6 +414,12 @@ class TrajectoryTransformer:
                     print(f"Skipping trajectory {traj_type} due to missing transforms")
                     continue
                 
+                # Check if this trajectory already exists
+                expected_output_dir = os.path.join(self.work_dir, "img2trajvid", f"{img_id}_{traj_type}")
+                if os.path.exists(expected_output_dir) and os.path.exists(os.path.join(expected_output_dir, "transforms.json")):
+                    print(f"Skipping {img_id}_{traj_type} - already generated (found {expected_output_dir})")
+                    continue
+                
                 # Create the trajectory folder structure and return the wrapper folder path
                 wrapper_folder = self.create_trajectory_folder(
                     img_id, traj_type, original_transforms, transformations
@@ -428,42 +440,73 @@ class TrajectoryTransformer:
                 else:
                     print(f"Failed to generate trajectory {img_id}_{traj_type}")
 
-        command = (
-            f"python model/svc_to_nerf_transform_sparse.py -r {self.work_dir}/img2trajvid "
-        )
-        return_code = self.run_command(command)
-        if return_code == 0:
-            print(f"Successfully created nerf transform")
+        # Check if transform conversion already done
+        merged_transforms = os.path.join(self.work_dir, "img2trajvid", "transforms.json")
+        if os.path.exists(merged_transforms):
+            print(f"Transform conversion already done (found {merged_transforms}), skipping...")
         else:
-            print(f"Failed to create nerf transform")
+            command = (
+                f"python model/svc_to_nerf_transform_sparse.py -r {self.work_dir}/img2trajvid "
+            )
+            return_code = self.run_command(command)
+            if return_code == 0:
+                print(f"Successfully created nerf transform")
+            else:
+                print(f"Failed to create nerf transform")
         
-        select_images_for_vggt(f"{self.work_dir}/img2trajvid", max_images=self.num_images_for_vggt)
-        # this updates the transforms.json files in place
-        run_vggt_and_align(f"{self.work_dir}/img2trajvid")
+        # Check if VGGT already done
+        vggt_pcl = os.path.join(self.work_dir, "img2trajvid", "vggt_pcl.ply")
+        if os.path.exists(vggt_pcl):
+            print(f"VGGT processing already done (found {vggt_pcl}), skipping...")
+        else:
+            select_images_for_vggt(f"{self.work_dir}/img2trajvid", max_images=self.num_images_for_vggt)
+            # this updates the transforms.json files in place
+            run_vggt_and_align(f"{self.work_dir}/img2trajvid")
 
         # -------------------------------------------------------------------------
         # 3. Train NeRF using the estimated poses
         # -------------------------------------------------------------------------
-        print("running splatfaco training")
-        command = [
-            "ns-train", "splatfacto-big",
-            "--data", f"{self.work_dir}/img2trajvid",
-            "--output-dir", NERF_FOLDER,
-            "--experiment-name", f"{self.scene_id if self.scene_id else ''}",
-            "--vis", "tensorboard",
-            "--steps_per_eval_image", "5000",
-            "--steps_per_eval_all_images", "1000000",
-            "--pipeline.model.camera-optimizer.mode", "off",
-            "--pipeline.model.strategy", "mcmc",
-            "--pipeline.model.rasterize_mode", "antialiased",
-            "--pipeline.model.use_scale_regularization", "True",
-            "--pipeline.model.max_gauss_ratio", "5.0",
-            "--pipeline.model.cull_scale_thresh", "0.1",
-            "--pipeline.model.cull_screen_size", "0.1",
-            "nerfstudio-data",
-            "--eval_mode", "all",
-        ]
-        subprocess.run(command)
+        # Check if training already completed (has checkpoint)
+        scene_root = os.path.join(NERF_FOLDER, f"{self.scene_id if self.scene_id else ''}", "splatfacto")
+        training_done = False
+        if os.path.exists(scene_root):
+            runs = sorted([d for d in os.listdir(scene_root) if os.path.isdir(os.path.join(scene_root, d))])
+            if runs:
+                latest_run = runs[-1]
+                checkpoint_dir = os.path.join(scene_root, latest_run, "nerfstudio_models")
+                if os.path.exists(checkpoint_dir) and len([f for f in os.listdir(checkpoint_dir) if f.endswith('.ckpt')]) > 0:
+                    print(f"Training already completed (found checkpoints in {checkpoint_dir}), skipping training...")
+                    training_done = True
+        
+        if not training_done:
+            print("running splatfaco training")
+            command = [
+                "ns-train", "splatfacto-big",
+                "--data", f"{self.work_dir}/img2trajvid",
+                "--output-dir", NERF_FOLDER,
+                "--experiment-name", f"{self.scene_id if self.scene_id else ''}",
+                "--vis", "tensorboard",
+                "--steps_per_eval_image", "5000",
+                "--steps_per_eval_all_images", "1000000",
+                "--pipeline.model.camera-optimizer.mode", "off",
+                "--pipeline.model.strategy", "mcmc",
+                "--pipeline.model.rasterize_mode", "antialiased",
+                "--pipeline.model.use_scale_regularization", "True",
+                "--pipeline.model.max_gauss_ratio", "5.0",
+                "--pipeline.model.cull_scale_thresh", "0.1",
+                "--pipeline.model.cull_screen_size", "0.1",
+                "nerfstudio-data",
+                "--eval_mode", "all",
+            ]
+            result = subprocess.run(command)
+            if result.returncode != 0:
+                print(f"\n⚠️  Training failed (exit code {result.returncode})")
+                print("This is likely due to gsplat CUDA compilation issues.")
+                print("You can:")
+                print("  1. Fix CUDA toolkit installation and retry")
+                print("  2. Manually run training later: ns-train splatfacto-big --data <path> --load-config <config>")
+                print("  3. Export will be skipped until training completes successfully")
+                # Don't raise error, just continue to export step (which will also fail but gracefully)
         gc.collect()
         torch.cuda.empty_cache()
         
@@ -515,11 +558,22 @@ class TrajectoryTransformer:
                         
                         if export_result.returncode == 0:
                             print(f"Successfully exported splatfacto to {output_dir}/splat.ply")
+                            # Rotate the ply file, s.t. standard viewers like SuperSplat use the correct coordinate system
+                            if os.path.exists(f"{output_dir}/splat.ply"):
+                                rotate_ply_3dgs(f"{output_dir}/splat.ply", f"{output_dir}/splat_rotated.ply")
+                            else:
+                                print(f"Warning: splat.ply not found at {output_dir}/splat.ply, skipping rotation")
                         else:
                             print(f"Failed to export splatfacto (return code: {export_result.returncode})")
-                        
-                        # Rotate the ply file, s.t. standard viewers like SuperSplat use the correct coordinate system
-                        rotate_ply_3dgs(f"{output_dir}/splat.ply", f"{output_dir}/splat_rotated.ply")
+                            print("This is likely due to training failure. Check the training logs above.")
+                            print("Common causes:")
+                            print("  1. CUDA toolkit not found (gsplat needs nvcc to compile)")
+                            print("  2. gsplat CUDA extensions not compiled properly")
+                            print("\nTo fix:")
+                            print("  1. Ensure CUDA toolkit is installed and in PATH")
+                            print("  2. Set CUDA_HOME environment variable")
+                            print("  3. Reinstall gsplat: pip install --force-reinstall --no-cache-dir gsplat")
+                            print("\nSkipping PLY rotation due to export failure.")
 
                         # Clear GPU memory after export
                         gc.collect()

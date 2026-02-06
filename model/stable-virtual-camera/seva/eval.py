@@ -2047,6 +2047,17 @@ def run_one_scene(
             yield video_path_0
 
         # ---------------------------------- check if we're running into objects ----------------------------------
+        # Clear GPU memory before running depth estimation to avoid OOM
+        import gc
+        import time
+        if torch.cuda.is_available():
+            # Clear cache multiple times and wait a bit for memory to be freed
+            for _ in range(3):
+                torch.cuda.empty_cache()
+                gc.collect()
+            time.sleep(1)  # Give GPU time to free memory
+            torch.cuda.empty_cache()
+        
         command = [
             "python3", "model/Video-Depth-Anything/run.py",
             "--input_video", os.path.join(save_path, "first-pass", "samples-rgb.mp4"),
@@ -2057,7 +2068,30 @@ def run_one_scene(
             "--target_fps", "-1",
             "--grayscale"
         ]
-        subprocess.run(command, check=False)
+        result = subprocess.run(command, check=False, capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"Warning: Depth estimation failed (exit code {result.returncode})")
+            if result.stderr:
+                error_msg = result.stderr
+                print(f"Error output: {error_msg[:1000]}")  # Print first 1000 chars
+                # Check if it's an OOM error
+                if "OutOfMemoryError" in error_msg or "out of memory" in error_msg.lower():
+                    print("\nDetected GPU out of memory error. Retrying with CPU fallback...")
+                    # Clear memory again
+                    if torch.cuda.is_available():
+                        torch.cuda.empty_cache()
+                        gc.collect()
+                        time.sleep(2)
+                    command_cpu = command + ["--cpu"]
+                    result_cpu = subprocess.run(command_cpu, check=False, capture_output=True, text=True)
+                    if result_cpu.returncode == 0:
+                        print("✅ Depth estimation completed successfully on CPU")
+                    else:
+                        print(f"❌ Depth estimation failed on CPU as well (exit code {result_cpu.returncode})")
+                        if result_cpu.stderr:
+                            print(f"CPU error: {result_cpu.stderr[:500]}")
+                else:
+                    print("Error is not OOM-related. Check the error message above.")
 
         if enable_collision_detection is True:
             collision_id = find_first_bright_frame(os.path.join(save_path, "first-pass", "samples-rgb_vis.mp4"))

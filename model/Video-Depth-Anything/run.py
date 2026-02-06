@@ -15,6 +15,7 @@ import argparse
 import numpy as np
 import os
 import torch
+from pathlib import Path
 
 from video_depth_anything.video_depth import VideoDepthAnything
 from utils.dc_utils import read_video_frames, save_video
@@ -32,10 +33,14 @@ if __name__ == '__main__':
     parser.add_argument('--grayscale', action='store_true', help='do not apply colorful palette')
     parser.add_argument('--save_npz', action='store_true', help='save depths as npz')
     parser.add_argument('--save_exr', action='store_true', help='save depths as exr')
+    parser.add_argument('--cpu', action='store_true', help='force CPU mode (useful when GPU memory is low)')
 
     args = parser.parse_args()
 
-    DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
+    if args.cpu:
+        DEVICE = 'cpu'
+    else:
+        DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     model_configs = {
         'vits': {'encoder': 'vits', 'features': 64, 'out_channels': [48, 96, 192, 384]},
@@ -43,9 +48,34 @@ if __name__ == '__main__':
         'vitl': {'encoder': 'vitl', 'features': 256, 'out_channels': [256, 512, 1024, 1024]},
     }
 
+    # Get the script's directory and resolve checkpoint path relative to worldexplorer root
+    script_dir = Path(__file__).parent.absolute()
+    # Go up to worldexplorer root: script_dir is model/Video-Depth-Anything, so parent.parent is worldexplorer root
+    worldexplorer_root = script_dir.parent.parent
+    checkpoint_path = worldexplorer_root / "model" / "Video-Depth-Anything" / "checkpoints" / f"video_depth_anything_{args.encoder}.pth"
+    
+    if not checkpoint_path.exists():
+        print(f"Error: Checkpoint file not found: {checkpoint_path}")
+        print(f"\nPlease download the checkpoint from:")
+        print(f"  https://huggingface.co/depth-anything/Video-Depth-Anything-Small/resolve/main/video_depth_anything_{args.encoder}.pth")
+        print(f"\nOr run from worldexplorer root:")
+        print(f"  wget -O {checkpoint_path} 'https://huggingface.co/depth-anything/Video-Depth-Anything-Small/resolve/main/video_depth_anything_{args.encoder}.pth?download=true'")
+        raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
+
     video_depth_anything = VideoDepthAnything(**model_configs[args.encoder])
-    video_depth_anything.load_state_dict(torch.load(f'model/Video-Depth-Anything/checkpoints/video_depth_anything_{args.encoder}.pth', map_location='cpu'), strict=True)
-    video_depth_anything = video_depth_anything.to(DEVICE).eval()
+    video_depth_anything.load_state_dict(torch.load(str(checkpoint_path), map_location='cpu'), strict=True)
+    
+    # Try to load on GPU, fallback to CPU if OOM
+    try:
+        video_depth_anything = video_depth_anything.to(DEVICE).eval()
+    except torch.cuda.OutOfMemoryError as e:
+        if DEVICE == 'cuda':
+            print(f"CUDA out of memory when loading model on GPU. Falling back to CPU...")
+            print(f"Original error: {e}")
+            DEVICE = 'cpu'
+            video_depth_anything = video_depth_anything.to(DEVICE).eval()
+        else:
+            raise
 
     frames, target_fps = read_video_frames(args.input_video, args.max_len, args.target_fps, args.max_res)
     depths, fps = video_depth_anything.infer_video_depth(frames, target_fps, input_size=args.input_size, device=DEVICE, fp32=args.fp32)
