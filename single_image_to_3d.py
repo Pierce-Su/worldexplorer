@@ -83,7 +83,8 @@ def generate_views_from_single_image(
     output_dir: str,
     traj_prior: str = "orbit",
     num_targets: int = 80,
-    cfg: str = "4.0,2.0"
+    cfg: str = "4.0,2.0",
+    translation_scaling_factor: float = 3.0,
 ):
     """Generate multiple views from a single image using SEVA."""
     print(f"\n{'='*80}")
@@ -122,7 +123,8 @@ def generate_views_from_single_image(
         "--num_targets", str(num_targets),
         "--L_short", "576",
         "--use_traj_prior", "True",
-        "--chunk_strategy", "interp"
+        "--chunk_strategy", "interp",
+        "--translation_scaling_factor", str(translation_scaling_factor),
     ]
     
     print(f"Running command: {' '.join(command)}\n")
@@ -317,7 +319,8 @@ def generate(
         views_dir,
         traj_prior=traj_prior,
         num_targets=num_targets,
-        cfg=cfg
+        cfg=cfg,
+        translation_scaling_factor=translation_scaling_factor,
     )
     
     # Step 2: Extract key frames

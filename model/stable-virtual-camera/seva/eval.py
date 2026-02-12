@@ -971,22 +971,40 @@ def replace_or_include_input_for_dict(
     c2w,
     K,
 ):
+    test_indices = np.asarray(test_indices) if not isinstance(test_indices, np.ndarray) else test_indices
     samples_new = {}
     for sample, value in samples.items():
         if "rgb" in sample:
-            imgs[test_indices] = (
-                value[test_indices] if value.shape[0] == imgs.shape[0] else value
-            ).to(device=imgs.device, dtype=imgs.dtype)
+            if value.shape[0] == imgs.shape[0]:
+                if np.any(test_indices < 0) or np.any(test_indices >= value.shape[0]):
+                    raise IndexError(
+                        f"replace_or_include_input: test_indices out of bounds for rgb. "
+                        f"test_indices range [{test_indices.min()}, {test_indices.max()}], "
+                        f"value.shape[0]={value.shape[0]}"
+                    )
+                assign_val = value[test_indices]
+            else:
+                if len(test_indices) != value.shape[0]:
+                    raise ValueError(
+                        f"replace_or_include_input: len(test_indices)={len(test_indices)} != "
+                        f"value.shape[0]={value.shape[0]}"
+                    )
+                assign_val = value
+            imgs[test_indices] = assign_val.to(device=imgs.device, dtype=imgs.dtype)
             samples_new[sample] = imgs
         elif "c2w" in sample:
-            c2w[test_indices] = (
-                value[test_indices] if value.shape[0] == c2w.shape[0] else value
-            ).to(device=c2w.device, dtype=c2w.dtype)
+            if value.shape[0] == c2w.shape[0]:
+                assign_val = value[test_indices]
+            else:
+                assign_val = value
+            c2w[test_indices] = assign_val.to(device=c2w.device, dtype=c2w.dtype)
             samples_new[sample] = c2w
         elif "intrinsics" in sample:
-            K[test_indices] = (
-                value[test_indices] if value.shape[0] == K.shape[0] else value
-            ).to(device=K.device, dtype=K.dtype)
+            if value.shape[0] == K.shape[0]:
+                assign_val = value[test_indices]
+            else:
+                assign_val = value
+            K[test_indices] = assign_val.to(device=K.device, dtype=K.dtype)
             samples_new[sample] = K
         else:
             samples_new[sample] = value
@@ -1010,6 +1028,13 @@ def decode_output(
                 value = torch.tensor(value)
 
             if indices is not None and value.shape[0] == T:
+                indices = np.asarray(indices)
+                if np.any(indices < 0) or np.any(indices >= T):
+                    raise IndexError(
+                        f"decode_output: indices out of bounds for sample {sample}. "
+                        f"indices range [{indices.min()}, {indices.max()}], "
+                        f"value.shape[0]={value.shape[0]}, T={T}"
+                    )
                 value = value[indices]
             samples[sample] = value
     else:
@@ -1017,6 +1042,13 @@ def decode_output(
         samples = samples.detach().cpu()
 
         if indices is not None and samples.shape[0] == T:
+            indices = np.asarray(indices)
+            if np.any(indices < 0) or np.any(indices >= T):
+                raise IndexError(
+                    f"decode_output: indices out of bounds. "
+                    f"indices range [{indices.min()}, {indices.max()}], "
+                    f"samples.shape[0]={samples.shape[0]}, T={T}"
+                )
             samples = samples[indices]
         samples = {"samples-rgb/image": samples}
 
@@ -2335,8 +2367,22 @@ def run_one_scene(
                 )
             extend_dict(all_samples, samples)
             all_test_inds.extend(chunk_test_inds)
+        sort_inds = np.argsort(all_test_inds)
+        for key, value in all_samples.items():
+            n_val = len(value) if isinstance(value, (list, tuple)) else value.shape[0]
+            if n_val != len(sort_inds):
+                raise ValueError(
+                    f"all_samples['{key}'] shape mismatch: len(value)={n_val}, "
+                    f"len(all_test_inds)={len(sort_inds)}"
+                )
+            if np.any(sort_inds < 0) or np.any(sort_inds >= n_val):
+                raise IndexError(
+                    f"all_samples reordering: sort_inds out of bounds for '{key}'. "
+                    f"sort_inds range [{sort_inds.min()}, {sort_inds.max()}], len(value)={n_val}"
+                )
         all_samples = {
-            key: value[np.argsort(all_test_inds)] for key, value in all_samples.items()
+            key: value[sort_inds] if isinstance(value, torch.Tensor) else [value[i] for i in sort_inds]
+            for key, value in all_samples.items()
         }
 
     # if "collision_id" in locals() and collision_id > 1:
