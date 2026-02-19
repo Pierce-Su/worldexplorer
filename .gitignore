@@ -6,6 +6,7 @@ scenes/
 outputs/
 nerfstudio_output/
 renders/
+data/
 
 # Byte-compiled files
 __pycache__/

@@ -336,7 +336,7 @@ def run_scaffold_generation(theme, mode=GenerationMode.fast, parent_folder=None,
     gen_pipe.enable_model_cpu_offload() #save some VRAM by offloading the model to CPU
     
     inpaint_pipe = StableDiffusionInpaintPipeline.from_pretrained(
-        "stabilityai/stable-diffusion-2-inpainting",
+        "sd2-community/stable-diffusion-2-inpainting",
         torch_dtype=torch.float16,
     )
     inpaint_pipe.enable_model_cpu_offload()

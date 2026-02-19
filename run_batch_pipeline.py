@@ -112,6 +112,12 @@ def process_scaffold_stage(
     custom = scaffold_config.get("custom", False)
     theme = sample.get("theme", common_args.get("default_theme"))
     
+    # Fallback: use content as theme if theme is not provided
+    if not theme and not custom:
+        theme = sample.get("content")
+        if theme:
+            print(f"  Using 'content' field as theme: {theme}")
+    
     # Prepare prompts
     prompts = scaffold_config.get("prompts", [])
     
