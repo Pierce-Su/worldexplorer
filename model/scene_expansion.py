@@ -292,8 +292,10 @@ class TrajectoryTransformer:
         
         return process.poll()
     
-    def run(self):
-        """Run the trajectory transformation process."""
+    def run(self, skip_3dgs=False):
+        """Run the trajectory transformation process.
+        If skip_3dgs=True, stop after trajectory generation and VGGT (no 3DGS training or export).
+        """
         # Create a global samples file for this run -> will keep track of all previously generated outputs
         global_samples_file = os.path.join(self.work_dir, "global_samples.pt")
 
@@ -463,6 +465,10 @@ class TrajectoryTransformer:
             # this updates the transforms.json files in place
             run_vggt_and_align(f"{self.work_dir}/img2trajvid")
 
+        if skip_3dgs:
+            print("\n--- Trajectory and VGGT completed (3DGS skipped) ---\n")
+            return
+
         # -------------------------------------------------------------------------
         # 3. Train NeRF using the estimated poses
         # -------------------------------------------------------------------------
@@ -587,7 +593,14 @@ class TrajectoryTransformer:
 
 
 
-def run_scene_expansion(input_folder, translation_scaling_factor=3, root_dir=None, trajectory_order=None, num_images_for_vggt=40):
+def run_scene_expansion(
+    input_folder,
+    translation_scaling_factor=3,
+    root_dir=None,
+    trajectory_order=None,
+    num_images_for_vggt=40,
+    skip_3dgs=False,
+):
     """
     Run scene expansion on a folder of images.
 
@@ -597,6 +610,7 @@ def run_scene_expansion(input_folder, translation_scaling_factor=3, root_dir=Non
         root_dir: Directory containing original trajectories (uses default if None)
         trajectory_order: Order to process trajectories (uses default if None)
         num_images_for_vggt: Number of images to sample for VGGT processing (default: 40)
+        skip_3dgs: If True, only run trajectory generation and VGGT; skip 3DGS training and export.
 
     Returns:
         scene_work_dir: Path to the work directory with results
@@ -606,25 +620,23 @@ def run_scene_expansion(input_folder, translation_scaling_factor=3, root_dir=Non
         root_dir = ROOT_DIR
     if trajectory_order is None:
         trajectory_order = TRAJECTORY_ORDER
-        
-    # Extract the scene name (last subfolder of input path)
+
     scene_name = os.path.basename(os.path.normpath(input_folder))
     if scene_name == "final":
-        # Go up two directory levels and get that folder name
         parent_parent = os.path.dirname(os.path.dirname(os.path.normpath(input_folder)))
         scene_name = os.path.basename(parent_parent)
-    
-    # Create a custom work directory for this scene
+
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     scene_id = f"{scene_name}_{translation_scaling_factor}_{timestamp}"
     scene_work_dir = f"./scenes/{scene_id}"
-    
+
     print(f"\n=== Processing scene: {scene_name} ===\n")
     print(f"Input folder: {input_folder}")
     print(f"Work directory: {scene_work_dir}")
     print(f"Translation scaling factor: {translation_scaling_factor}")
-    
-    # Create and run the transformer for this scene
+    if skip_3dgs:
+        print("(Skipping 3DGS training and export)")
+
     transformer = TrajectoryTransformer(
         root_dir,
         scene_work_dir,
@@ -634,12 +646,125 @@ def run_scene_expansion(input_folder, translation_scaling_factor=3, root_dir=Non
         scene_id=scene_id,
         num_images_for_vggt=num_images_for_vggt
     )
-    transformer.run()
-    
+    transformer.run(skip_3dgs=skip_3dgs)
+
     return scene_work_dir
 
 
+def run_3dgs_only(work_dir, scene_id=None, nerf_folder=None):
+    """
+    Run only 3DGS training and PLY export on an existing scene work directory.
+    The work_dir must already contain img2trajvid/ with VGGT outputs (e.g. vggt_pcl.ply).
+
+    Args:
+        work_dir: Path to the scene work directory (e.g. ./scenes/scene_name_3_20250101_120000)
+        scene_id: Experiment name for nerfstudio (default: basename of work_dir)
+        nerf_folder: Base output dir for nerfstudio (default: NERF_FOLDER)
+
+    Returns:
+        Path to the exports directory containing splat.ply / splat_rotated.ply, or None on failure.
+    """
+    if nerf_folder is None:
+        nerf_folder = NERF_FOLDER
+    if scene_id is None:
+        scene_id = os.path.basename(os.path.normpath(work_dir))
+
+    img2trajvid = os.path.join(work_dir, "img2trajvid")
+    if not os.path.isdir(img2trajvid):
+        print(f"ERROR: work_dir must contain img2trajvid: {img2trajvid}")
+        return None
+    vggt_pcl = os.path.join(img2trajvid, "vggt_pcl.ply")
+    if not os.path.exists(vggt_pcl):
+        print(f"ERROR: VGGT output not found: {vggt_pcl}. Run scene expansion (stage 2) first.")
+        return None
+
+    print(f"\n=== 3DGS only: {scene_id} ===\n")
+    print(f"Work directory: {work_dir}")
+    print(f"Data: {img2trajvid}")
+
+    # Train splatfacto
+    scene_root = os.path.join(nerf_folder, scene_id, "splatfacto")
+    training_done = False
+    if os.path.exists(scene_root):
+        runs = sorted([d for d in os.listdir(scene_root) if os.path.isdir(os.path.join(scene_root, d))])
+        if runs:
+            latest_run = runs[-1]
+            checkpoint_dir = os.path.join(scene_root, latest_run, "nerfstudio_models")
+            if os.path.exists(checkpoint_dir) and len([f for f in os.listdir(checkpoint_dir) if f.endswith(".ckpt")]) > 0:
+                print(f"Training already completed (found {checkpoint_dir}), skipping...")
+                training_done = True
+
+    if not training_done:
+        print("Running splatfacto training...")
+        command = [
+            "ns-train", "splatfacto-big",
+            "--data", img2trajvid,
+            "--output-dir", nerf_folder,
+            "--experiment-name", scene_id,
+            "--vis", "tensorboard",
+            "--steps_per_eval_image", "5000",
+            "--steps_per_eval_all_images", "1000000",
+            "--pipeline.model.camera-optimizer.mode", "off",
+            "--pipeline.model.strategy", "mcmc",
+            "--pipeline.model.rasterize_mode", "antialiased",
+            "--pipeline.model.use_scale_regularization", "True",
+            "--pipeline.model.max_gauss_ratio", "5.0",
+            "--pipeline.model.cull_scale_thresh", "0.1",
+            "--pipeline.model.cull_screen_size", "0.1",
+            "nerfstudio-data",
+            "--eval_mode", "all",
+        ]
+        result = subprocess.run(command)
+        if result.returncode != 0:
+            print(f"Training failed (exit code {result.returncode})")
+            return None
+    gc.collect()
+    torch.cuda.empty_cache()
+
+    # Export to PLY
+    scene_root = os.path.join(nerf_folder, scene_id, "splatfacto")
+    if not os.path.exists(scene_root):
+        print(f"Scene root not found: {scene_root}")
+        return None
+    runs = sorted([d for d in os.listdir(scene_root) if os.path.isdir(os.path.join(scene_root, d))])
+    if not runs:
+        print(f"No splatfacto runs in {scene_root}")
+        return None
+    latest_run = runs[-1]
+    config_path = os.path.join(scene_root, latest_run, "config.yml")
+    if not os.path.exists(config_path):
+        print(f"Config not found: {config_path}")
+        return None
+    output_dir = os.path.join(scene_root, latest_run, "exports", "splat")
+    os.makedirs(output_dir, exist_ok=True)
+
+    if os.path.exists(os.path.join(output_dir, "splat.ply")):
+        print(f"Export already exists at {output_dir}/splat.ply")
+        return output_dir
+
+    print(f"Exporting splatfacto from {config_path} -> {output_dir}")
+    export_command = [
+        "python", "-c",
+        f"import sys, torch, os; "
+        f"os.environ['NERFSTUDIO_DISABLE_TORCH_COMPILE'] = '1'; "
+        f"sys.argv = ['ns-export', 'gaussian-splat', '--load-config', '{config_path}', '--output-dir', '{output_dir}']; "
+        f"orig = torch.load; "
+        f"setattr(torch, 'load', lambda *a, **k: orig(*a, **{{**k, 'weights_only': False}})); "
+        f"from nerfstudio.scripts.exporter import entrypoint; "
+        f"entrypoint()"
+    ]
+    export_result = subprocess.run(export_command)
+    if export_result.returncode != 0:
+        print(f"Export failed (return code {export_result.returncode})")
+        return None
+    if os.path.exists(os.path.join(output_dir, "splat.ply")):
+        rotate_ply_3dgs(os.path.join(output_dir, "splat.ply"), os.path.join(output_dir, "splat_rotated.ply"))
+    gc.collect()
+    torch.cuda.empty_cache()
+    print(f"3DGS export done: {output_dir}")
+    return output_dir
+
+
 if __name__ == "__main__":
-    # For standalone execution, process from INPUT_FOLDERS
     for input_folder, translation_scaling_factor in INPUT_FOLDERS:
         run_scene_expansion(input_folder, translation_scaling_factor)

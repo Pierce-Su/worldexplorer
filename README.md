@@ -37,6 +37,8 @@ CUDA_HOME=/usr/local/cuda-12.8 pip install "git+https://github.com/facebookresea
 pip install diffusers["torch"] transformers protobuf transformers[sentencepiece] easydict plyfile
 pip install --upgrade pip setuptools && pip install git+https://github.com/nerfstudio-project/nerfstudio.git@50e0e3c
 pip install -U xformers --index-url https://download.pytorch.org/whl/cu128
+
+# Download and place depth_anything_v2_metric_hypersim_vitl under model/Depth_Anything_V2/checkpoints/
 ```
 
 If you encounter [this issue](https://github.com/nerfstudio-project/gsplat/issues/249) during 3DGS optimization, it's likely that your CUDA version is not consistent between terminal sessions (check through `nvcc --version`). You can ensure the CUDA version stays fixed by setting the PATH variable in your `~/.bashrc`. For CUDA 12.8, this can be done by running:

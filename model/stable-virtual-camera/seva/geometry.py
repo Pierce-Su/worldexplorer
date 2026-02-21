@@ -229,6 +229,42 @@ def rt_to_mat4(
     return mat4
 
 
+def get_yaw_in_place_w2cs(
+    ref_w2c: torch.Tensor,
+    lookat: torch.Tensor,
+    up: torch.Tensor | None,
+    num_frames: int,
+    clockwise: bool = True,
+    endpoint: bool = False,
+    degree: float = 360.0,
+    **_,
+) -> torch.Tensor:
+    """Camera position fixed; only yaw (horizontal look direction) changes.
+    Like standing in one spot and looking around. Avoids wall collision from orbit.
+    """
+    ref_c2w = torch.linalg.inv(ref_w2c)
+    ref_position = ref_c2w[:3, 3]
+    if up is None:
+        up = -ref_c2w[:3, 1]
+    assert up is not None
+    ref_forward = F.normalize(lookat - ref_position, dim=-1)
+    thetas = (
+        torch.linspace(0.0, torch.pi * degree / 180, num_frames, device=ref_w2c.device)
+        if endpoint
+        else torch.linspace(
+            0.0, torch.pi * degree / 180, num_frames + 1, device=ref_w2c.device
+        )[:-1]
+    )
+    if not clockwise:
+        thetas = -thetas
+    # Rotate ref_forward around up by thetas
+    rotmats = roma.rotvec_to_rotmat(thetas[:, None] * up[None])
+    forwards = torch.einsum("nij,j->ni", rotmats, ref_forward)
+    lookats = ref_position[None] + forwards
+    positions = ref_position[None].repeat(num_frames, 1)
+    return get_lookat_w2cs(positions, lookats, up[None].expand(num_frames, 3))
+
+
 def get_preset_pose_fov(
     option: Literal[
         "orbit",
@@ -245,6 +281,7 @@ def get_preset_pose_fov(
         "move-left",
         "move-right",
         "roll",
+        "pan-in-place",
     ],
     num_frames: int,
     start_w2c: torch.Tensor,
@@ -310,6 +347,18 @@ def get_preset_pose_fov(
                 num_frames,
                 degree=360.0,
                 endpoint=False,
+            )
+        ).numpy()
+        fovs = np.full((num_frames,), fov)
+    elif option == "pan-in-place":
+        poses = torch.linalg.inv(
+            get_yaw_in_place_w2cs(
+                start_w2c,
+                look_at,
+                up_direction,
+                num_frames,
+                endpoint=False,
+                degree=360.0,
             )
         ).numpy()
         fovs = np.full((num_frames,), fov)
