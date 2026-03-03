@@ -18,6 +18,7 @@ Stage definitions:
 - Default scaffold method is single_image (SEVA): views are generated from one input image.
   single_image_hybrid: SEVA for views 0,2,4,6 + inpainting for 1,3,5,7 (often better quality).
   scaffold_gen: text prompts + image as 000.
+  two_images: SEVA img2trajvid with 0° + 180° guidance images and defined camera poses (run generate_180_views.py first).
 - Each sample can have photorealistic and/or stylized image paths; a full scene is generated
   for each variant. Output: output_base/photorealistic/index_XXXX/ and
   output_base/stylized/index_XXXX/.
@@ -37,6 +38,7 @@ import re
 import shutil
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -360,6 +362,81 @@ def _run_stage1_single_image_hybrid(
         return None
 
 
+def _run_stage1_two_images(
+    sample: dict,
+    dataset_dir: Path,
+    output_base: Path,
+    common_args: dict,
+    input_image_path: Optional[Path],
+    variant_name: str,
+) -> Optional[str]:
+    """Stage 1 using SEVA img2trajvid with two guidance images (0° + 180°) and defined poses."""
+    from single_image_to_3d import (
+        generate_views_from_two_images,
+        extract_key_frames_for_scaffold,
+        prepare_final_scaffold,
+    )
+
+    index = sample["index"]
+    if not input_image_path or not input_image_path.exists():
+        print("  ERROR: two_images method requires an input (0°) image for this sample")
+        return None
+
+    views_180_dir = common_args.get("views_180_dir")
+    if not views_180_dir:
+        views_180_dir = dataset_dir / "views_180"
+    else:
+        views_180_dir = Path(views_180_dir)
+    image_180_path = views_180_dir / variant_name / f"index_{index:04d}_180.png"
+    if not image_180_path.exists():
+        print(f"  ERROR: two_images requires 180° image at {image_180_path}; run generate_180_views.py first")
+        return None
+
+    output_scaffold_dir = output_base / f"index_{index:04d}" / "scaffold"
+    output_scaffold_dir.mkdir(parents=True, exist_ok=True)
+    views_dir = output_scaffold_dir / "generated_views_two"
+    scaffold_dir = output_scaffold_dir / "scaffold"
+    final_dir = output_scaffold_dir / "final"
+    views_dir.mkdir(parents=True, exist_ok=True)
+
+    cfg = common_args.get("cfg", "3.0,2.0")
+    translation_scaling_factor = sample.get("expansion", {}).get(
+        "translation_scaling_factor",
+        common_args.get("translation_scaling_factor", 3.0),
+    )
+    num_seva_frames = common_args.get("num_seva_frames", 80)
+    scene_name = f"index_{index:04d}_two"
+
+    try:
+        generated_scene_dir = generate_views_from_two_images(
+            str(input_image_path),
+            str(image_180_path),
+            output_dir=str(views_dir),
+            scene_name=scene_name,
+            cfg=cfg,
+            translation_scaling_factor=translation_scaling_factor,
+            num_seva_frames=num_seva_frames,
+        )
+        if common_args.get("output_all_seva_frames"):
+            from single_image_to_3d import copy_all_seva_frames_to
+            copy_all_seva_frames_to(str(generated_scene_dir), str(output_base / f"index_{index:04d}" / "all_seva_frames"))
+        extract_key_frames_for_scaffold(str(generated_scene_dir), str(scaffold_dir))
+        prepare_final_scaffold(str(scaffold_dir), str(final_dir))
+        prompts = _get_prompts(sample, dataset_dir)
+        if prompts:
+            meta_path = output_scaffold_dir / "theme_info.txt"
+            with open(meta_path, "w") as f:
+                f.write("Prompts from dataset:\n\n")
+                for i, p in enumerate(prompts[:4]):
+                    f.write(f"  {i}: {p}\n")
+        return str(final_dir)
+    except Exception as e:
+        print(f"  ERROR two_images: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
 def run_stage1(
     sample: dict,
     dataset_dir: Path,
@@ -374,8 +451,8 @@ def run_stage1(
         input_image_path = _resolve_input_image(sample, dataset_dir)
     if input_image_path:
         print(f"  Using dataset image as scaffold index 0: {input_image_path}")
-    elif scaffold_method in ("single_image", "single_image_hybrid"):
-        print("  Skipping: no input image for single-image method")
+    elif scaffold_method in ("single_image", "single_image_hybrid", "two_images"):
+        print("  Skipping: no input image for this method")
         return None
 
     if scaffold_method == "scaffold_gen":
@@ -389,6 +466,11 @@ def run_stage1(
     if scaffold_method == "single_image_hybrid":
         return _run_stage1_single_image_hybrid(
             sample, dataset_dir, output_base, common_args, input_image_path
+        )
+    if scaffold_method == "two_images":
+        variant_name = output_base.name  # e.g. photorealistic or stylized
+        return _run_stage1_two_images(
+            sample, dataset_dir, output_base, common_args, input_image_path, variant_name
         )
     print(f"  Unknown scaffold_method: {scaffold_method}")
     return None
@@ -604,6 +686,10 @@ Examples:
   # Use single-image flow (SEVA) with dataset image as 000
   python run_batch_pipeline.py --dataset_dir data/curated_set --scaffold_method single_image
 
+  # Two-image scaffold (0° + 180°); run generate_180_views.py first, then:
+  python run_batch_pipeline.py --dataset_dir data/curated_set --scaffold_method two_images
+  python run_batch_pipeline.py --dataset_dir data/curated_set --scaffold_method two_images --views_180_dir data/curated_set/views_180
+
   # Specific indices
   python run_batch_pipeline.py --dataset_dir data/curated_set --indices 0 2 5
 
@@ -622,10 +708,12 @@ Examples:
     parser.add_argument("--only_stages", type=int, nargs="+", choices=[1, 2, 3], default=None,
                         help="Run only these stages (e.g. --only_stages 1 2 3)")
     parser.add_argument("--scaffold_method", type=str, default="single_image",
-                        choices=["scaffold_gen", "single_image", "single_image_hybrid"],
-                        help="single_image (default): SEVA only. single_image_hybrid: SEVA for 0,2,4,6 + inpainting for 1,3,5,7. scaffold_gen: text prompts + image as 000.")
+                        choices=["scaffold_gen", "single_image", "single_image_hybrid", "two_images"],
+                        help="single_image (default): SEVA only. single_image_hybrid: SEVA for 0,2,4,6 + inpainting for 1,3,5,7. scaffold_gen: text prompts + image as 000. two_images: SEVA img2trajvid with 0° + 180° guidance images and defined poses (requires --views_180_dir or dataset_dir/views_180).")
     # Stage 1
     g1 = parser.add_argument_group("Stage 1: Scaffold")
+    g1.add_argument("--views_180_dir", type=str, default=None,
+                    help="Directory containing 180° counterpart images for two_images scaffold (default: <dataset_dir>/views_180). Expects <views_180_dir>/<variant>/index_XXXX_180.png.")
     g1.add_argument("--scaffold_mode", type=str, default="manual",
                      choices=["fast", "automatic", "manual"])
     g1.add_argument("--default_theme", type=str, default=None)
@@ -692,6 +780,7 @@ Examples:
         "cfg": args.cfg,
         "output_all_seva_frames": args.output_all_seva_frames,
         "num_seva_frames": args.num_seva_frames,
+        "views_180_dir": args.views_180_dir,
     }
 
     output_base = Path(args.output_base)
@@ -704,8 +793,8 @@ Examples:
         for variant_name, variant_image_path in variants:
             jobs.append((sample, variant_name, variant_image_path))
     if not jobs:
-        print("ERROR: No jobs to run. Each sample must have at least one of "
-              "photorealistic.original_path or stylized.original_path pointing to an existing file.",
+        print("ERROR: No jobs to run. Each sample must have at least one variant (photorealistic or "
+              "stylized) with a 'filename' key and an existing file at dataset_dir/<variant>/<filename>.",
               file=sys.stderr)
         sys.exit(1)
 
@@ -723,7 +812,9 @@ Examples:
     print(f"{'='*80}\n")
 
     all_results = []
+    failed_entries: List[Dict[str, Any]] = []  # Per-run log of failed (index, variant[, error])
     start = time.time()
+    run_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     for job_num, (sample, variant_name, variant_image_path) in enumerate(jobs, 1):
         index = sample.get("index", 0)
         variant_output_base = output_base / variant_name
@@ -746,6 +837,7 @@ Examples:
             if res["status"] == "success":
                 print(f"  ✓ Done. Stages: {res['stages_completed']}")
             else:
+                failed_entries.append({"index": index, "variant": variant_name})
                 print("  ✗ Failed")
                 if not args.continue_on_error:
                     break
@@ -753,6 +845,7 @@ Examples:
             print(f"  ERROR: {e}")
             import traceback
             traceback.print_exc()
+            failed_entries.append({"index": index, "variant": variant_name, "error": str(e)})
             all_results.append({
                 "index": index,
                 "variant": variant_name,
@@ -788,6 +881,18 @@ Examples:
             "results": all_results,
         }, f, indent=2)
     print(f"Summary written to {summary_path}")
+
+    # Per-run file documenting failed indices (one file per run, timestamped)
+    failed_indices = sorted({e["index"] for e in failed_entries})
+    failed_log_path = output_base / f"failed_indices_{run_timestamp}.json"
+    with open(failed_log_path, "w") as f:
+        json.dump({
+            "run_timestamp": run_timestamp,
+            "total_failed_jobs": len(failed_entries),
+            "failed_indices": failed_indices,
+            "failed_entries": failed_entries,
+        }, f, indent=2)
+    print(f"Failed indices log written to {failed_log_path} ({len(failed_indices)} indices, {len(failed_entries)} job(s))")
 
     sys.exit(0 if failed == 0 else 1)
 

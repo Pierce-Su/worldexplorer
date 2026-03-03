@@ -1,0 +1,23 @@
+{
+  "total": 1,
+  "success": 0,
+  "failed": 1,
+  "elapsed_seconds": 5.7220458984375e-05,
+  "only_stages": [
+    2
+  ],
+  "scaffold_method": "single_image",
+  "results": [
+    {
+      "index": 0,
+      "scene_type": "indoor",
+      "category": "Dining spaces",
+      "stages_completed": [],
+      "scaffold_path": null,
+      "scene_path": null,
+      "export_path": null,
+      "status": "failed",
+      "variant": "photorealistic"
+    }
+  ]
+}

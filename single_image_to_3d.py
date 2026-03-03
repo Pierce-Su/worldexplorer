@@ -78,6 +78,165 @@ def create_train_test_split(output_dir: str, num_inputs: int = 1):
     return split_path
 
 
+def _c2w_ry_degrees(angle_deg: float) -> np.ndarray:
+    """Rotation around Y (up) in degrees. 4x4 camera-to-world. After ReconfusionParser's flip (cols 1,2 *= -1) we want this."""
+    theta = np.radians(angle_deg)
+    c, s = np.cos(theta), np.sin(theta)
+    # R_y in standard form (Y up, right-handed)
+    R = np.array([
+        [c, 0, s, 0],
+        [0, 1, 0, 0],
+        [-s, 0, c, 0],
+        [0, 0, 0, 1],
+    ], dtype=np.float64)
+    # Parser does camtoworlds[:, :, [1, 2]] *= -1, so store R such that after flip we get R.
+    # So stored[:,1] = -R[:,1], stored[:,2] = -R[:,2].
+    stored = R.copy()
+    stored[:, 1] *= -1
+    stored[:, 2] *= -1
+    return stored
+
+
+# Predefined trajectory for two-view (0° + 180°) scaffold, same pattern as Stage 2's in/left/right/up.
+_PREDEFINED_TWO_VIEW_TRAJ = "predefined_trajectories/pan_in_place_two"
+
+
+def _build_two_images_reconfusion_folder(
+    scene_dir: str,
+    image_0_path: str,
+    image_180_path: str,
+    image_size: tuple = (576, 576),
+    predefined_trajectory_root: Optional[str] = None,
+) -> str:
+    """
+    Build a ReconfusionParser-format folder for SEVA img2trajvid with 2 inputs (0° and 180°).
+    Same pattern as Stage 2 (scene_expansion): use a predefined trajectory when available
+    (transforms.json + train_test_split_2.json), plug in the user's two images, black placeholders for targets.
+    If no predefined folder exists, build poses in code (0°, 180°, 45°, 90°, 135°, 225°, 270°, 315°).
+    """
+    os.makedirs(scene_dir, exist_ok=True)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    predef_dir = predefined_trajectory_root or os.path.join(script_dir, _PREDEFINED_TWO_VIEW_TRAJ)
+    transforms_path = os.path.join(predef_dir, "transforms.json")
+    split_path = os.path.join(predef_dir, "train_test_split_2.json")
+
+    if os.path.isfile(transforms_path) and os.path.isfile(split_path):
+        # Use predefined trajectory (same as Stage 2: copy structure, replace input images)
+        with open(transforms_path, "r") as f:
+            transforms = json.load(f)
+        with open(split_path, "r") as f:
+            train_test_split = json.load(f)
+        with open(os.path.join(scene_dir, "transforms.json"), "w") as f:
+            json.dump(transforms, f, indent=2)
+        with open(os.path.join(scene_dir, "train_test_split_2.json"), "w") as f:
+            json.dump(train_test_split, f, indent=2)
+        n_frames = len(transforms["frames"])
+        # Copy user images for first two frames; placeholders for the rest
+        for i, (label, src_path) in enumerate([("000", image_0_path), ("001", image_180_path)]):
+            dst = os.path.join(scene_dir, f"{label}.png")
+            img = Image.open(src_path).convert("RGB")
+            if img.size != image_size:
+                img = img.resize(image_size, Image.LANCZOS)
+            img.save(dst)
+        for i in range(2, n_frames):
+            dst = os.path.join(scene_dir, f"{i:03d}.png")
+            Image.new("RGB", image_size, color="black").save(dst)
+        return scene_dir
+
+    # Fallback: build trajectory in code (original behavior)
+    W, H = image_size
+    fov = 60.0
+    fl = W / (2 * np.tan(np.radians(fov / 2)))
+    cx, cy = W / 2, H / 2
+    target_angles_deg = [45, 90, 135, 225, 270, 315]
+    frames = []
+    for i in range(8):
+        if i == 0:
+            c2w = _c2w_ry_degrees(0.0)
+            file_path = "./000.png"
+        elif i == 1:
+            c2w = _c2w_ry_degrees(180.0)
+            file_path = "./001.png"
+        else:
+            c2w = _c2w_ry_degrees(target_angles_deg[i - 2])
+            file_path = f"./{i:03d}.png"
+        frames.append({
+            "file_path": file_path,
+            "transform_matrix": c2w.tolist(),
+            "fl_x": fl, "fl_y": fl, "cx": cx, "cy": cy, "w": W, "h": H,
+        })
+    transforms = {"orientation_override": "none", "frames": frames}
+    with open(os.path.join(scene_dir, "transforms.json"), "w") as f:
+        json.dump(transforms, f, indent=2)
+    train_test_split = {"train_ids": [0, 1], "test_ids": [2, 3, 4, 5, 6, 7]}
+    with open(os.path.join(scene_dir, "train_test_split_2.json"), "w") as f:
+        json.dump(train_test_split, f, indent=2)
+    for i, (label, src_path) in enumerate([("000", image_0_path), ("001", image_180_path)]):
+        dst = os.path.join(scene_dir, f"{label}.png")
+        img = Image.open(src_path).convert("RGB")
+        if img.size != image_size:
+            img = img.resize(image_size, Image.LANCZOS)
+        img.save(dst)
+    for i in range(2, 8):
+        dst = os.path.join(scene_dir, f"{i:03d}.png")
+        Image.new("RGB", image_size, color="black").save(dst)
+    return scene_dir
+
+
+def generate_views_from_two_images(
+    image_0_path: str,
+    image_180_path: str,
+    output_dir: str,
+    scene_name: str,
+    cfg: str = "3.0,2.0",
+    translation_scaling_factor: float = 3.0,
+    num_seva_frames: Optional[int] = 80,
+) -> str:
+    """
+    Generate scaffold views using SEVA img2trajvid with two guidance images (0° and 180°)
+    and their known opposite poses. Same pattern as Stage 2 (scene_expansion): predefined
+    trajectory (predefined_trajectories/pan_in_place_two/) defines poses; we plug in the
+    two user images and run img2trajvid. Uses ReconfusionParser format and task img2trajvid.
+    """
+    print(f"\n{'='*80}")
+    print("STEP 1: Generating views from two images (0° + 180°) with SEVA img2trajvid")
+    print(f"{'='*80}\n")
+    os.makedirs(output_dir, exist_ok=True)
+    scene_dir = os.path.join(output_dir, scene_name)
+    _build_two_images_reconfusion_folder(scene_dir, image_0_path, image_180_path)
+
+    # Run SEVA demo with task img2trajvid, num_inputs=2
+    command = [
+        "python", "model/stable-virtual-camera/demo.py",
+        "--data_path", output_dir,
+        "--task", "img2trajvid",
+        "--num_inputs", "2",
+        "--replace_or_include_input", "True",
+        "--cfg", cfg,
+        "--L_short", "576",
+        "--use_traj_prior", "True",
+        "--chunk_strategy", "interp-gt",
+        "--translation_scaling_factor", str(translation_scaling_factor),
+    ]
+    if num_seva_frames is not None and num_seva_frames > 0:
+        command.extend(["--num_prior_frames", str(num_seva_frames)])
+    print(f"Running: {' '.join(command)}\n")
+    result = subprocess.run(command, capture_output=True, text=True, cwd=os.path.dirname(os.path.abspath(__file__)) or ".")
+    if result.returncode != 0:
+        print(f"SEVA stderr: {result.stderr}")
+        raise RuntimeError(f"SEVA img2trajvid failed with code {result.returncode}")
+    print("View generation completed.")
+    work_dir = "work_dirs/backwards/img2trajvid"
+    generated_scene_dir = os.path.join(work_dir, scene_name)
+    if not os.path.exists(generated_scene_dir):
+        possible = [d for d in glob.glob(os.path.join(work_dir, "*")) if os.path.isdir(d)]
+        possible = [d for d in possible if os.path.exists(os.path.join(d, "samples-rgb")) or os.path.exists(os.path.join(d, "first-pass", "samples-rgb"))]
+        if possible:
+            possible.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+            generated_scene_dir = possible[0]
+    return generated_scene_dir
+
+
 def generate_views_from_single_image(
     input_image_path: str,
     output_dir: str,

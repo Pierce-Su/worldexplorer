@@ -3,7 +3,7 @@ model/Depth_Anything_V2/checkpoints/depth_anything_v2_metric_hypersim_vitl.pth
 model/Video-Depth-Anything/checkpoints/video_depth_anything_vits.pth
 work_dirs/
 scenes/
-outputs/
+output/
 nerfstudio_output/
 renders/
 data/

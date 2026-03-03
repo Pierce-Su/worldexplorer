@@ -96,6 +96,14 @@ def parse_task(
         input_indices = [0]
         anchor_indices = np.linspace(1, num_targets, num_anchors).tolist()
 
+        print(f"num_targets: {num_targets}")
+        print(f"num_anchors: {num_anchors}")
+        print(f"anchor_indices: {anchor_indices}")
+        print(f"input_indices: {input_indices}")
+        print(f"scene: {scene}")
+        print(f"T: {T}")
+        print(f"version_dict: {version_dict}")
+        print(f"options: {options}")
         all_imgs_path = [scene] + [None] * num_targets
 
         c2ws, fovs = get_preset_pose_fov(

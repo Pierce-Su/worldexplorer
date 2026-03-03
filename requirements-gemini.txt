@@ -1,0 +1,5 @@
+# Dependencies for generate_180_views.py (Gemini Nano Banana Pro 180° view generation)
+# Install with: pip install -r requirements-gemini.txt
+
+google-genai>=1.0.0
+Pillow>=9.0.0
