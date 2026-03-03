@@ -4,6 +4,7 @@ model/Video-Depth-Anything/checkpoints/video_depth_anything_vits.pth
 work_dirs/
 scenes/
 output/
+output_two_image/
 nerfstudio_output/
 renders/
 data/
