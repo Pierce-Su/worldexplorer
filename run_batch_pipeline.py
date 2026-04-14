@@ -15,10 +15,12 @@ Stage definitions:
     .ply (splat.ply, splat_rotated.ply). Requires Stage 2 output. Export under
     nerfstudio_output/ and optionally referenced in result["export_path"].
 
-- Default scaffold method is single_image (SEVA): views are generated from one input image.
-  single_image_hybrid: SEVA for views 0,2,4,6 + inpainting for 1,3,5,7 (often better quality).
-  scaffold_gen: text prompts + image as 000.
-  two_images: SEVA img2trajvid with 0° + 180° guidance images and defined camera poses (run generate_180_views.py first).
+- Scaffold Generation Method Options:
+  (Default) single_image (SEVA): views are generated from one input image.
+  (Original Method) scaffold_gen: text prompts + image as 000.
+  (N/A) single_image_hybrid: SEVA for views 0,2,4,6 + inpainting for 1,3,5,7 (often better quality).
+  (N/A) two_images: SEVA img2trajvid with 0° + 180° guidance images and defined camera poses (run generate_180_views.py first).
+
 - Each sample can have photorealistic and/or stylized image paths; a full scene is generated
   for each variant. Output: output_base/photorealistic/index_XXXX/ and
   output_base/stylized/index_XXXX/.
@@ -463,6 +465,7 @@ def run_stage1(
         return _run_stage1_single_image(
             sample, dataset_dir, output_base, common_args, input_image_path
         )
+    """
     if scaffold_method == "single_image_hybrid":
         return _run_stage1_single_image_hybrid(
             sample, dataset_dir, output_base, common_args, input_image_path
@@ -472,6 +475,7 @@ def run_stage1(
         return _run_stage1_two_images(
             sample, dataset_dir, output_base, common_args, input_image_path, variant_name
         )
+    """
     print(f"  Unknown scaffold_method: {scaffold_method}")
     return None
 
